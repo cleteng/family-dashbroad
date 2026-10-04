@@ -4,6 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema";
 import { users } from "@/db/schema/users";
@@ -20,6 +21,11 @@ function createTestDb() {
   sqlite.pragma("journal_mode = WAL");
   sqlite.pragma("foreign_keys = ON");
   const db = drizzle(sqlite, { schema });
+
+  // Apply real Drizzle migration files
+  const migrationsFolder = path.join(process.cwd(), "drizzle");
+  migrate(db, { migrationsFolder });
+
   return { db, sqlite, dbPath, dir };
 }
 
@@ -28,67 +34,6 @@ describe("TASK-002 Database", () => {
 
   beforeEach(() => {
     ctx = createTestDb();
-    // Apply schema via raw SQL from drizzle (simple create for tests)
-    // We use migrate in real flow; here we create tables for isolation.
-    ctx.sqlite.exec(`
-      CREATE TABLE users (
-        id TEXT PRIMARY KEY,
-        email TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
-      );
-      CREATE TABLE dashboards (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        name TEXT NOT NULL,
-        description TEXT,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
-      );
-      CREATE TABLE widgets (
-        id TEXT PRIMARY KEY,
-        dashboard_id TEXT NOT NULL REFERENCES dashboards(id) ON DELETE CASCADE,
-        type TEXT NOT NULL,
-        title TEXT,
-        config TEXT,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
-      );
-      CREATE TABLE widget_layouts (
-        id TEXT PRIMARY KEY,
-        widget_id TEXT NOT NULL REFERENCES widgets(id) ON DELETE CASCADE,
-        breakpoint TEXT NOT NULL,
-        x INTEGER NOT NULL,
-        y INTEGER NOT NULL,
-        w INTEGER NOT NULL,
-        h INTEGER NOT NULL,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        UNIQUE(widget_id, breakpoint)
-      );
-      CREATE TABLE display_tokens (
-        id TEXT PRIMARY KEY,
-        dashboard_id TEXT NOT NULL REFERENCES dashboards(id) ON DELETE CASCADE,
-        token_hash TEXT NOT NULL UNIQUE,
-        name TEXT,
-        is_active INTEGER NOT NULL DEFAULT 1,
-        last_used_at INTEGER,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
-      );
-      CREATE TABLE integrations (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        type TEXT NOT NULL,
-        name TEXT,
-        config TEXT,
-        credentials TEXT,
-        is_active INTEGER NOT NULL DEFAULT 1,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
-      );
-    `);
   });
 
   afterEach(() => {
@@ -96,7 +41,7 @@ describe("TASK-002 Database", () => {
     fs.rmSync(ctx.dir, { recursive: true, force: true });
   });
 
-  it("can initialize database", () => {
+  it("applies Drizzle migration and creates all tables", () => {
     expect(ctx.db).toBeDefined();
     const tables = ctx.sqlite
       .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
@@ -110,16 +55,32 @@ describe("TASK-002 Database", () => {
     expect(names).toContain("integrations");
   });
 
+  it("migration creates CHECK constraints on widget_layouts", () => {
+    const sql = ctx.sqlite
+      .prepare(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='widget_layouts'",
+      )
+      .get() as { sql: string };
+    expect(sql.sql).toContain("CHECK");
+    expect(sql.sql).toMatch(/x\s*>=\s*0/i);
+    expect(sql.sql).toMatch(/y\s*>=\s*0/i);
+    expect(sql.sql).toMatch(/w\s*>\s*0/i);
+    expect(sql.sql).toMatch(/h\s*>\s*0/i);
+  });
+
   it("can create a user", () => {
     const id = crypto.randomUUID();
     const now = new Date();
-    ctx.db.insert(users).values({
-      id,
-      email: "test@example.com",
-      passwordHash: "hashed-password",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
+    ctx.db
+      .insert(users)
+      .values({
+        id,
+        email: "test@example.com",
+        passwordHash: "hashed-password",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
 
     const row = ctx.db.select().from(users).where(eq(users.id, id)).get();
     expect(row).toBeDefined();
@@ -132,22 +93,28 @@ describe("TASK-002 Database", () => {
     const dashId = crypto.randomUUID();
     const now = new Date();
 
-    ctx.db.insert(users).values({
-      id: userId,
-      email: "owner@example.com",
-      passwordHash: "hash",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
+    ctx.db
+      .insert(users)
+      .values({
+        id: userId,
+        email: "owner@example.com",
+        passwordHash: "hash",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
 
-    ctx.db.insert(dashboards).values({
-      id: dashId,
-      userId,
-      name: "Living Room",
-      description: "Main display",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
+    ctx.db
+      .insert(dashboards)
+      .values({
+        id: dashId,
+        userId,
+        name: "Living Room",
+        description: "Main display",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
 
     const row = ctx.db.select().from(dashboards).where(eq(dashboards.id, dashId)).get();
     expect(row?.userId).toBe(userId);
@@ -160,173 +127,237 @@ describe("TASK-002 Database", () => {
     const widgetId = crypto.randomUUID();
     const now = new Date();
 
-    ctx.db.insert(users).values({
-      id: userId,
-      email: "w@example.com",
-      passwordHash: "h",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-    ctx.db.insert(dashboards).values({
-      id: dashId,
-      userId,
-      name: "D",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-    ctx.db.insert(widgets).values({
-      id: widgetId,
-      dashboardId: dashId,
-      type: "clock",
-      title: "Clock",
-      config: JSON.stringify({ timezone: "Asia/Shanghai" }),
-      createdAt: now,
-      updatedAt: now,
-    }).run();
+    ctx.db
+      .insert(users)
+      .values({
+        id: userId,
+        email: "w@example.com",
+        passwordHash: "h",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+    ctx.db
+      .insert(dashboards)
+      .values({
+        id: dashId,
+        userId,
+        name: "D",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+    ctx.db
+      .insert(widgets)
+      .values({
+        id: widgetId,
+        dashboardId: dashId,
+        type: "clock",
+        title: "Clock",
+        config: JSON.stringify({ timezone: "Asia/Shanghai" }),
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
 
     const row = ctx.db.select().from(widgets).where(eq(widgets.id, widgetId)).get();
     expect(row?.type).toBe("clock");
     expect(JSON.parse(row!.config!)).toEqual({ timezone: "Asia/Shanghai" });
   });
 
-  it("can create widget layout", () => {
+  it("can create widget layout with valid bounds", () => {
     const userId = crypto.randomUUID();
     const dashId = crypto.randomUUID();
     const widgetId = crypto.randomUUID();
     const layoutId = crypto.randomUUID();
     const now = new Date();
 
-    ctx.db.insert(users).values({
-      id: userId,
-      email: "l@example.com",
-      passwordHash: "h",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-    ctx.db.insert(dashboards).values({
-      id: dashId,
-      userId,
-      name: "D",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-    ctx.db.insert(widgets).values({
-      id: widgetId,
-      dashboardId: dashId,
-      type: "clock",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-    ctx.db.insert(widgetLayouts).values({
-      id: layoutId,
-      widgetId,
-      breakpoint: "desktop",
-      x: 0,
-      y: 0,
-      w: 4,
-      h: 2,
-      createdAt: now,
-      updatedAt: now,
-    }).run();
+    ctx.db
+      .insert(users)
+      .values({
+        id: userId,
+        email: "l@example.com",
+        passwordHash: "h",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+    ctx.db
+      .insert(dashboards)
+      .values({
+        id: dashId,
+        userId,
+        name: "D",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+    ctx.db
+      .insert(widgets)
+      .values({
+        id: widgetId,
+        dashboardId: dashId,
+        type: "clock",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+    ctx.db
+      .insert(widgetLayouts)
+      .values({
+        id: layoutId,
+        widgetId,
+        breakpoint: "desktop",
+        x: 0,
+        y: 0,
+        w: 4,
+        h: 2,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
 
-    const row = ctx.db.select().from(widgetLayouts).where(eq(widgetLayouts.id, layoutId)).get();
+    const row = ctx.db
+      .select()
+      .from(widgetLayouts)
+      .where(eq(widgetLayouts.id, layoutId))
+      .get();
     expect(row?.breakpoint).toBe("desktop");
     expect(row?.w).toBe(4);
   });
 
-  it("rejects duplicate widget + breakpoint", () => {
-    const userId = crypto.randomUUID();
-    const dashId = crypto.randomUUID();
-    const widgetId = crypto.randomUUID();
-    const now = new Date();
-
-    ctx.db.insert(users).values({
-      id: userId,
-      email: "u@example.com",
-      passwordHash: "h",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-    ctx.db.insert(dashboards).values({
-      id: dashId,
-      userId,
-      name: "D",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-    ctx.db.insert(widgets).values({
-      id: widgetId,
-      dashboardId: dashId,
-      type: "clock",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-    ctx.db.insert(widgetLayouts).values({
-      id: crypto.randomUUID(),
-      widgetId,
-      breakpoint: "mobile",
-      x: 0,
-      y: 0,
-      w: 2,
-      h: 2,
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-
+  it("rejects negative x", () => {
+    const { userId, dashId, widgetId, now } = seedMinimal(ctx);
     expect(() => {
-      ctx.db.insert(widgetLayouts).values({
+      ctx.db
+        .insert(widgetLayouts)
+        .values({
+          id: crypto.randomUUID(),
+          widgetId,
+          breakpoint: "desktop",
+          x: -1,
+          y: 0,
+          w: 2,
+          h: 2,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+    }).toThrow();
+  });
+
+  it("rejects negative y", () => {
+    const { widgetId, now } = seedMinimal(ctx);
+    expect(() => {
+      ctx.db
+        .insert(widgetLayouts)
+        .values({
+          id: crypto.randomUUID(),
+          widgetId,
+          breakpoint: "desktop",
+          x: 0,
+          y: -1,
+          w: 2,
+          h: 2,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+    }).toThrow();
+  });
+
+  it("rejects zero or negative w", () => {
+    const { widgetId, now } = seedMinimal(ctx);
+    expect(() => {
+      ctx.db
+        .insert(widgetLayouts)
+        .values({
+          id: crypto.randomUUID(),
+          widgetId,
+          breakpoint: "desktop",
+          x: 0,
+          y: 0,
+          w: 0,
+          h: 2,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+    }).toThrow();
+  });
+
+  it("rejects zero or negative h", () => {
+    const { widgetId, now } = seedMinimal(ctx);
+    expect(() => {
+      ctx.db
+        .insert(widgetLayouts)
+        .values({
+          id: crypto.randomUUID(),
+          widgetId,
+          breakpoint: "desktop",
+          x: 0,
+          y: 0,
+          w: 2,
+          h: 0,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+    }).toThrow();
+  });
+
+  it("rejects duplicate widget + breakpoint", () => {
+    const { widgetId, now } = seedMinimal(ctx);
+    ctx.db
+      .insert(widgetLayouts)
+      .values({
         id: crypto.randomUUID(),
         widgetId,
         breakpoint: "mobile",
-        x: 1,
-        y: 1,
+        x: 0,
+        y: 0,
         w: 2,
         h: 2,
         createdAt: now,
         updatedAt: now,
-      }).run();
+      })
+      .run();
+
+    expect(() => {
+      ctx.db
+        .insert(widgetLayouts)
+        .values({
+          id: crypto.randomUUID(),
+          widgetId,
+          breakpoint: "mobile",
+          x: 1,
+          y: 1,
+          w: 2,
+          h: 2,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
     }).toThrow();
   });
 
   it("cascades delete widget -> layouts", () => {
-    const userId = crypto.randomUUID();
-    const dashId = crypto.randomUUID();
-    const widgetId = crypto.randomUUID();
+    const { widgetId, now } = seedMinimal(ctx);
     const layoutId = crypto.randomUUID();
-    const now = new Date();
-
-    ctx.db.insert(users).values({
-      id: userId,
-      email: "c@example.com",
-      passwordHash: "h",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-    ctx.db.insert(dashboards).values({
-      id: dashId,
-      userId,
-      name: "D",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-    ctx.db.insert(widgets).values({
-      id: widgetId,
-      dashboardId: dashId,
-      type: "clock",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-    ctx.db.insert(widgetLayouts).values({
-      id: layoutId,
-      widgetId,
-      breakpoint: "desktop",
-      x: 0,
-      y: 0,
-      w: 4,
-      h: 2,
-      createdAt: now,
-      updatedAt: now,
-    }).run();
+    ctx.db
+      .insert(widgetLayouts)
+      .values({
+        id: layoutId,
+        widgetId,
+        breakpoint: "desktop",
+        x: 0,
+        y: 0,
+        w: 4,
+        h: 2,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
 
     ctx.db.delete(widgets).where(eq(widgets.id, widgetId)).run();
 
@@ -339,72 +370,55 @@ describe("TASK-002 Database", () => {
   });
 
   it("enforces unique token_hash", () => {
-    const userId = crypto.randomUUID();
-    const dashId = crypto.randomUUID();
-    const now = new Date();
+    const { dashId, now } = seedMinimal(ctx);
 
-    ctx.db.insert(users).values({
-      id: userId,
-      email: "t@example.com",
-      passwordHash: "h",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-    ctx.db.insert(dashboards).values({
-      id: dashId,
-      userId,
-      name: "D",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-
-    ctx.db.insert(displayTokens).values({
-      id: crypto.randomUUID(),
-      dashboardId: dashId,
-      tokenHash: "same-hash",
-      name: "iPad",
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    }).run();
-
-    expect(() => {
-      ctx.db.insert(displayTokens).values({
+    ctx.db
+      .insert(displayTokens)
+      .values({
         id: crypto.randomUUID(),
         dashboardId: dashId,
         tokenHash: "same-hash",
-        name: "Phone",
+        name: "iPad",
         isActive: true,
         createdAt: now,
         updatedAt: now,
-      }).run();
+      })
+      .run();
+
+    expect(() => {
+      ctx.db
+        .insert(displayTokens)
+        .values({
+          id: crypto.randomUUID(),
+          dashboardId: dashId,
+          tokenHash: "same-hash",
+          name: "Phone",
+          isActive: true,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
     }).toThrow();
   });
 
   it("can create integration with separated config/credentials", () => {
-    const userId = crypto.randomUUID();
-    const now = new Date();
-
-    ctx.db.insert(users).values({
-      id: userId,
-      email: "i@example.com",
-      passwordHash: "h",
-      createdAt: now,
-      updatedAt: now,
-    }).run();
+    const { userId, now } = seedMinimal(ctx);
 
     const id = crypto.randomUUID();
-    ctx.db.insert(integrations).values({
-      id,
-      userId,
-      type: "home_assistant",
-      name: "Home",
-      config: JSON.stringify({ baseUrl: "http://ha.local" }),
-      credentials: JSON.stringify({ token: "secret" }),
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    }).run();
+    ctx.db
+      .insert(integrations)
+      .values({
+        id,
+        userId,
+        type: "home_assistant",
+        name: "Home",
+        config: JSON.stringify({ baseUrl: "http://ha.local" }),
+        credentials: JSON.stringify({ token: "secret" }),
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
 
     const row = ctx.db.select().from(integrations).where(eq(integrations.id, id)).get();
     expect(row?.type).toBe("home_assistant");
@@ -415,13 +429,57 @@ describe("TASK-002 Database", () => {
   it("enforces foreign keys", () => {
     const now = new Date();
     expect(() => {
-      ctx.db.insert(dashboards).values({
-        id: crypto.randomUUID(),
-        userId: "non-existent-user",
-        name: "Orphan",
-        createdAt: now,
-        updatedAt: now,
-      }).run();
+      ctx.db
+        .insert(dashboards)
+        .values({
+          id: crypto.randomUUID(),
+          userId: "non-existent-user",
+          name: "Orphan",
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
     }).toThrow();
   });
 });
+
+/** Helper to seed a minimal user + dashboard + widget for layout tests */
+function seedMinimal(ctx: ReturnType<typeof createTestDb>) {
+  const userId = crypto.randomUUID();
+  const dashId = crypto.randomUUID();
+  const widgetId = crypto.randomUUID();
+  const now = new Date();
+
+  ctx.db
+    .insert(users)
+    .values({
+      id: userId,
+      email: `u-${userId.slice(0, 8)}@example.com`,
+      passwordHash: "h",
+      createdAt: now,
+      updatedAt: now,
+    })
+    .run();
+  ctx.db
+    .insert(dashboards)
+    .values({
+      id: dashId,
+      userId,
+      name: "D",
+      createdAt: now,
+      updatedAt: now,
+    })
+    .run();
+  ctx.db
+    .insert(widgets)
+    .values({
+      id: widgetId,
+      dashboardId: dashId,
+      type: "clock",
+      createdAt: now,
+      updatedAt: now,
+    })
+    .run();
+
+  return { userId, dashId, widgetId, now };
+}

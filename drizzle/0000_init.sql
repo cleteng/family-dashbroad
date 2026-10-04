@@ -39,7 +39,11 @@ CREATE TABLE `widget_layouts` (
 	`h` integer NOT NULL,
 	`created_at` integer NOT NULL,
 	`updated_at` integer NOT NULL,
-	FOREIGN KEY (`widget_id`) REFERENCES `widgets`(`id`) ON UPDATE no action ON DELETE cascade
+	FOREIGN KEY (`widget_id`) REFERENCES `widgets`(`id`) ON UPDATE no action ON DELETE cascade,
+	CONSTRAINT `widget_layouts_x_non_negative` CHECK(`widget_layouts`.`x` >= 0),
+	CONSTRAINT `widget_layouts_y_non_negative` CHECK(`widget_layouts`.`y` >= 0),
+	CONSTRAINT `widget_layouts_w_positive` CHECK(`widget_layouts`.`w` > 0),
+	CONSTRAINT `widget_layouts_h_positive` CHECK(`widget_layouts`.`h` > 0)
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `widget_layouts_widget_id_breakpoint_unique` ON `widget_layouts` (`widget_id`,`breakpoint`);

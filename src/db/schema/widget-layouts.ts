@@ -1,4 +1,5 @@
-import { sqliteTable, text, integer, unique } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, unique, check } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
 import { widgets } from "./widgets";
 
 export const widgetLayouts = sqliteTable(
@@ -21,5 +22,11 @@ export const widgetLayouts = sqliteTable(
       .$defaultFn(() => new Date())
       .$onUpdateFn(() => new Date()),
   },
-  (table) => [unique().on(table.widgetId, table.breakpoint)],
+  (table) => [
+    unique().on(table.widgetId, table.breakpoint),
+    check("widget_layouts_x_non_negative", sql`${table.x} >= 0`),
+    check("widget_layouts_y_non_negative", sql`${table.y} >= 0`),
+    check("widget_layouts_w_positive", sql`${table.w} > 0`),
+    check("widget_layouts_h_positive", sql`${table.h} > 0`),
+  ],
 );

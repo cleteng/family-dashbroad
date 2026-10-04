@@ -2,9 +2,10 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-This repository is currently at **TASK-001** (project foundation). No business features yet.
+**Current status: TASK-002 complete** (SQLite + Drizzle data layer).  
+Next: **TASK-003** — Single administrator authentication.
 
-## Tech Stack (frozen for TASK-001)
+## Tech Stack
 
 - Next.js 16 (App Router) + React 19 + TypeScript (strict)
 - Tailwind CSS
@@ -25,7 +26,8 @@ This repository is currently at **TASK-001** (project foundation). No business f
 
 ```bash
 cp .env.example .env
-npm install
+npm install --legacy-peer-deps
+npm run db:migrate
 npm run dev
 ```
 
@@ -51,6 +53,15 @@ Open http://localhost:3000
 ## Database
 
 SQLite path is controlled by `DATABASE_URL` (default `file:./data/app.db`).
+
+Core tables (TASK-002):
+
+- `users`
+- `dashboards`
+- `widgets`
+- `widget_layouts` (with CHECK: x>=0, y>=0, w>0, h>0)
+- `display_tokens` (stores only token hash)
+- `integrations` (config and credentials separated)
 
 The `data/` directory is created automatically and is git-ignored.
 
@@ -79,19 +90,20 @@ src/
   app/           # Next.js App Router (admin, display, api routes later)
   components/    # Shared UI
   db/            # Drizzle client + schema
+    schema/      # Table definitions
   lib/           # Utilities
   widgets/       # Widget registry & renderers (later)
   styles/        # Extra CSS
 tests/
   unit/
   e2e/
-drizzle/         # Generated migrations
+drizzle/         # Migrations (committed)
 ```
 
-## Quality Gates (TASK-001)
+## Quality Gates
 
 ```bash
-npm install
+npm install --legacy-peer-deps
 npm run lint
 npm run test
 npm run build
@@ -102,7 +114,7 @@ docker compose config
 
 ## Next Steps
 
-- TASK-002: SQLite + Drizzle schema foundation
-- TASK-003: Single administrator authentication
+- **TASK-003**: Single administrator authentication
+- Then vertical slice: Dashboard → Widget → Layout → Display Token → Display
 
 See the development plan and PRD for the full roadmap.
