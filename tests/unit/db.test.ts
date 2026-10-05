@@ -62,10 +62,10 @@ describe("TASK-002 Database", () => {
       )
       .get() as { sql: string };
     expect(sql.sql).toContain("CHECK");
-    expect(sql.sql).toMatch(/x\s*>=\s*0/i);
-    expect(sql.sql).toMatch(/y\s*>=\s*0/i);
-    expect(sql.sql).toMatch(/w\s*>\s*0/i);
-    expect(sql.sql).toMatch(/h\s*>\s*0/i);
+    expect(sql.sql).toMatch(/CHECK(`?widget_layouts`?\.`?x`?\s*>=\s*0)/i);
+    expect(sql.sql).toMatch(/CHECK(`?widget_layouts`?\.`?y`?\s*>=\s*0)/i);
+    expect(sql.sql).toMatch(/CHECK(`?widget_layouts`?\.`?w`?\s*>\s*0)/i);
+    expect(sql.sql).toMatch(/CHECK(`?widget_layouts`?\.`?h`?\s*>\s*0)/i);
   });
 
   it("can create a user", () => {
@@ -227,7 +227,7 @@ describe("TASK-002 Database", () => {
   });
 
   it("rejects negative x", () => {
-    const { userId, dashId, widgetId, now } = seedMinimal(ctx);
+    const { widgetId, now } = seedMinimal(ctx);
     expect(() => {
       ctx.db
         .insert(widgetLayouts)
