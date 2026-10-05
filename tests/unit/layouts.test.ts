@@ -6,11 +6,7 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import * as schema from "@/db/schema";
-import {
-  dedupeLayoutEntries,
-  saveLayoutSchema,
-  type LayoutEntry,
-} from "@/lib/layouts";
+import { dedupeLayoutEntries, saveLayoutSchema, type LayoutEntry } from "@/lib/layouts";
 
 function createTestDb() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fd-lay-"));
@@ -75,9 +71,7 @@ describe("layout validation", () => {
 
   it("rejects illegal breakpoint", () => {
     const r = saveLayoutSchema.safeParse({
-      layouts: [
-        { widgetId: "w1", breakpoint: "watch", x: 0, y: 0, w: 1, h: 1 },
-      ],
+      layouts: [{ widgetId: "w1", breakpoint: "watch", x: 0, y: 0, w: 1, h: 1 }],
     });
     expect(r.success).toBe(false);
   });
@@ -85,16 +79,12 @@ describe("layout validation", () => {
   it("rejects w:0 and x:-1 and non-integers", () => {
     expect(
       saveLayoutSchema.safeParse({
-        layouts: [
-          { widgetId: "w1", breakpoint: "desktop", x: 0, y: 0, w: 0, h: 1 },
-        ],
+        layouts: [{ widgetId: "w1", breakpoint: "desktop", x: 0, y: 0, w: 0, h: 1 }],
       }).success,
     ).toBe(false);
     expect(
       saveLayoutSchema.safeParse({
-        layouts: [
-          { widgetId: "w1", breakpoint: "desktop", x: -1, y: 0, w: 1, h: 1 },
-        ],
+        layouts: [{ widgetId: "w1", breakpoint: "desktop", x: -1, y: 0, w: 1, h: 1 }],
       }).success,
     ).toBe(false);
     expect(
@@ -160,17 +150,7 @@ describe("layout storage semantics", () => {
         .prepare(
           "INSERT INTO widget_layouts (id, widget_id, breakpoint, x, y, w, h, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
-        .run(
-          crypto.randomUUID(),
-          e.widgetId,
-          e.breakpoint,
-          e.x,
-          e.y,
-          e.w,
-          e.h,
-          now,
-          now,
-        );
+        .run(crypto.randomUUID(), e.widgetId, e.breakpoint, e.x, e.y, e.w, e.h, now, now);
     }
 
     const rows = ctx.sqlite
@@ -213,9 +193,9 @@ describe("layout storage semantics", () => {
       )
       .run(crypto.randomUUID(), w1, "desktop", 1, 1, 3, 3, now, now);
 
-    const remaining = ctx.sqlite
-      .prepare("SELECT widget_id FROM widget_layouts")
-      .all() as { widget_id: string }[];
+    const remaining = ctx.sqlite.prepare("SELECT widget_id FROM widget_layouts").all() as {
+      widget_id: string;
+    }[];
     expect(remaining.map((r) => r.widget_id)).toEqual([w1]);
   });
 
@@ -227,13 +207,11 @@ describe("layout storage semantics", () => {
       )
       .run(crypto.randomUUID(), w1, "mobile", 0, 0, 1, 1, now, now);
 
-    ctx.sqlite
-      .prepare("DELETE FROM widget_layouts WHERE widget_id IN (?, ?)")
-      .run(w1, w2);
+    ctx.sqlite.prepare("DELETE FROM widget_layouts WHERE widget_id IN (?, ?)").run(w1, w2);
 
-    const count = ctx.sqlite
-      .prepare("SELECT COUNT(*) as c FROM widget_layouts")
-      .get() as { c: number };
+    const count = ctx.sqlite.prepare("SELECT COUNT(*) as c FROM widget_layouts").get() as {
+      c: number;
+    };
     expect(count.c).toBe(0);
   });
 

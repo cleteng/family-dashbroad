@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOwnedDashboard } from "@/lib/dashboards";
-import {
-  LayoutValidationError,
-  getLayout,
-  saveLayout,
-  saveLayoutSchema,
-} from "@/lib/layouts";
+import { LayoutValidationError, getLayout, saveLayout, saveLayoutSchema } from "@/lib/layouts";
 import { requireAuth } from "@/lib/require-auth";
 
 type RouteContext = { params: Promise<{ id: string }> };

@@ -105,18 +105,13 @@ export function getLayout(dashboardId: string): LayoutEntry[] {
  * - Transaction: delete all layouts for dashboard widgets, then insert new rows.
  * - Empty layouts array clears all layout rows for this dashboard's widgets.
  */
-export function saveLayout(
-  dashboardId: string,
-  entries: LayoutEntry[],
-): LayoutEntry[] {
+export function saveLayout(dashboardId: string, entries: LayoutEntry[]): LayoutEntry[] {
   const ownedIds = new Set(listWidgetIdsForDashboard(dashboardId));
   const deduped = dedupeLayoutEntries(entries);
 
   for (const e of deduped) {
     if (!ownedIds.has(e.widgetId)) {
-      throw new LayoutValidationError(
-        `widgetId ${e.widgetId} does not belong to this dashboard`,
-      );
+      throw new LayoutValidationError(`widgetId ${e.widgetId} does not belong to this dashboard`);
     }
   }
 
@@ -124,9 +119,7 @@ export function saveLayout(
 
   db.transaction((tx) => {
     if (widgetIds.length > 0) {
-      tx.delete(widgetLayouts)
-        .where(inArray(widgetLayouts.widgetId, widgetIds))
-        .run();
+      tx.delete(widgetLayouts).where(inArray(widgetLayouts.widgetId, widgetIds)).run();
     }
 
     const now = new Date();
