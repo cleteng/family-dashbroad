@@ -84,14 +84,10 @@ export function listDashboards(userId: string): Dashboard[] {
   return rows.map(toDashboard);
 }
 
-export function createDashboard(
-  userId: string,
-  input: CreateDashboardInput,
-): Dashboard {
+export function createDashboard(userId: string, input: CreateDashboardInput): Dashboard {
   const id = crypto.randomUUID();
   const now = new Date();
-  const description =
-    input.description === undefined ? null : input.description;
+  const description = input.description === undefined ? null : input.description;
 
   db.insert(dashboards)
     .values({
@@ -159,9 +155,6 @@ export function deleteDashboard(userId: string, id: string): boolean {
  * Return dashboard if it belongs to userId, otherwise null.
  * Used by Widget routes and future features.
  */
-export function getOwnedDashboard(
-  userId: string,
-  id: string,
-): Dashboard | null {
+export function getOwnedDashboard(userId: string, id: string): Dashboard | null {
   return getDashboard(userId, id);
 }

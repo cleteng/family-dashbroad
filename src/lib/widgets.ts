@@ -78,10 +78,7 @@ export const updateWidgetSchema = z
     config: configSchema,
   })
   .refine(
-    (data) =>
-      data.type !== undefined ||
-      data.title !== undefined ||
-      data.config !== undefined,
+    (data) => data.type !== undefined || data.title !== undefined || data.config !== undefined,
     { message: "At least one of type, title, or config is required" },
   );
 
@@ -131,17 +128,12 @@ export function listWidgets(dashboardId: string): Widget[] {
   return rows.map(toWidget);
 }
 
-export function createWidget(
-  dashboardId: string,
-  input: CreateWidgetInput,
-): Widget {
+export function createWidget(dashboardId: string, input: CreateWidgetInput): Widget {
   const id = crypto.randomUUID();
   const now = new Date();
   const title = input.title === undefined ? null : input.title;
   const configStr =
-    input.config === undefined || input.config === null
-      ? null
-      : JSON.stringify(input.config);
+    input.config === undefined || input.config === null ? null : JSON.stringify(input.config);
 
   db.insert(widgets)
     .values({
@@ -160,10 +152,7 @@ export function createWidget(
   return toWidget(row);
 }
 
-export function getWidget(
-  dashboardId: string,
-  widgetId: string,
-): Widget | null {
+export function getWidget(dashboardId: string, widgetId: string): Widget | null {
   const row = db
     .select()
     .from(widgets)
@@ -190,8 +179,7 @@ export function updateWidget(
   if (input.type !== undefined) patch.type = input.type;
   if (input.title !== undefined) patch.title = input.title;
   if (input.config !== undefined) {
-    patch.config =
-      input.config === null ? null : JSON.stringify(input.config);
+    patch.config = input.config === null ? null : JSON.stringify(input.config);
   }
 
   db.update(widgets)
@@ -202,10 +190,7 @@ export function updateWidget(
   return getWidget(dashboardId, widgetId);
 }
 
-export function deleteWidget(
-  dashboardId: string,
-  widgetId: string,
-): boolean {
+export function deleteWidget(dashboardId: string, widgetId: string): boolean {
   const existing = getWidget(dashboardId, widgetId);
   if (!existing) return false;
 

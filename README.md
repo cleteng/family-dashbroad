@@ -38,13 +38,13 @@ Open http://localhost:3000
 
 All endpoints require auth. Dashboard must belong to the current user (else 404).
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/dashboards/[id]/widgets` | List widgets (created order) |
-| `POST` | `/api/dashboards/[id]/widgets` | Create `{ type, title?, config? }` |
-| `GET` | `/api/dashboards/[id]/widgets/[widgetId]` | Get one |
-| `PATCH` | `/api/dashboards/[id]/widgets/[widgetId]` | Update `{ type?, title?, config? }` |
-| `DELETE` | `/api/dashboards/[id]/widgets/[widgetId]` | Delete |
+| Method   | Path                                      | Description                         |
+| -------- | ----------------------------------------- | ----------------------------------- |
+| `GET`    | `/api/dashboards/[id]/widgets`            | List widgets (created order)        |
+| `POST`   | `/api/dashboards/[id]/widgets`            | Create `{ type, title?, config? }`  |
+| `GET`    | `/api/dashboards/[id]/widgets/[widgetId]` | Get one                             |
+| `PATCH`  | `/api/dashboards/[id]/widgets/[widgetId]` | Update `{ type?, title?, config? }` |
+| `DELETE` | `/api/dashboards/[id]/widgets/[widgetId]` | Delete                              |
 
 `type` whitelist: `clock`, `weather`, `calendar`, `chinese-almanac`, `google-tasks`, `home-assistant-sensor`.  
 `config` is a JSON **object** (or null) at the API boundary.
@@ -53,12 +53,12 @@ All endpoints require auth. Dashboard must belong to the current user (else 404)
 
 All endpoints require an authenticated admin session (cookie). Unauthenticated requests receive `401`.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/dashboards` | List current user's dashboards |
-| `POST` | `/api/dashboards` | Create `{ name, description? }` |
-| `GET` | `/api/dashboards/[id]` | Get one (own only; else 404) |
-| `PATCH` | `/api/dashboards/[id]` | Update `{ name?, description? }` |
+| Method   | Path                   | Description                              |
+| -------- | ---------------------- | ---------------------------------------- |
+| `GET`    | `/api/dashboards`      | List current user's dashboards           |
+| `POST`   | `/api/dashboards`      | Create `{ name, description? }`          |
+| `GET`    | `/api/dashboards/[id]` | Get one (own only; else 404)             |
+| `PATCH`  | `/api/dashboards/[id]` | Update `{ name?, description? }`         |
 | `DELETE` | `/api/dashboards/[id]` | Delete (cascades widgets/layouts/tokens) |
 
 ## Authentication (TASK-003)

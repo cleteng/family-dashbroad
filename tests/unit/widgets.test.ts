@@ -7,11 +7,7 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema";
-import {
-  createWidgetSchema,
-  updateWidgetSchema,
-  WIDGET_TYPES,
-} from "@/lib/widgets";
+import { createWidgetSchema, updateWidgetSchema, WIDGET_TYPES } from "@/lib/widgets";
 
 function createTestDb() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fd-wid-"));
@@ -35,11 +31,7 @@ function seedUser(sqlite: Database.Database, email: string): string {
   return id;
 }
 
-function seedDashboard(
-  sqlite: Database.Database,
-  userId: string,
-  name: string,
-): string {
+function seedDashboard(sqlite: Database.Database, userId: string, name: string): string {
   const id = crypto.randomUUID();
   const now = Date.now();
   sqlite
@@ -64,12 +56,8 @@ describe("widget validation", () => {
   });
 
   it("rejects config array or string", () => {
-    expect(
-      createWidgetSchema.safeParse({ type: "clock", config: [1, 2] }).success,
-    ).toBe(false);
-    expect(
-      createWidgetSchema.safeParse({ type: "clock", config: "nope" }).success,
-    ).toBe(false);
+    expect(createWidgetSchema.safeParse({ type: "clock", config: [1, 2] }).success).toBe(false);
+    expect(createWidgetSchema.safeParse({ type: "clock", config: "nope" }).success).toBe(false);
   });
 
   it("accepts config object and null", () => {
@@ -81,16 +69,12 @@ describe("widget validation", () => {
     if (obj.success) {
       expect(obj.data.config).toEqual({ timezone: "America/Toronto" });
     }
-    expect(
-      createWidgetSchema.safeParse({ type: "clock", config: null }).success,
-    ).toBe(true);
+    expect(createWidgetSchema.safeParse({ type: "clock", config: null }).success).toBe(true);
   });
 
   it("update requires at least one field", () => {
     expect(updateWidgetSchema.safeParse({}).success).toBe(false);
-    expect(updateWidgetSchema.safeParse({ title: "Clock" }).success).toBe(
-      true,
-    );
+    expect(updateWidgetSchema.safeParse({ title: "Clock" }).success).toBe(true);
   });
 
   it("empty title becomes null", () => {
@@ -135,9 +119,9 @@ describe("widget ownership and storage", () => {
       )
       .run(wB, dashB, "weather", null, null, now, now);
 
-    const rows = ctx.sqlite
-      .prepare("SELECT id FROM widgets WHERE dashboard_id = ?")
-      .all(dashA) as { id: string }[];
+    const rows = ctx.sqlite.prepare("SELECT id FROM widgets WHERE dashboard_id = ?").all(dashA) as {
+      id: string;
+    }[];
     expect(rows.map((r) => r.id)).toEqual([wA]);
   });
 
@@ -151,9 +135,7 @@ describe("widget ownership and storage", () => {
       .run(wB, dashB, "clock", null, null, now, now);
 
     const cross = ctx.sqlite
-      .prepare(
-        "SELECT id FROM widgets WHERE id = ? AND dashboard_id = ?",
-      )
+      .prepare("SELECT id FROM widgets WHERE id = ? AND dashboard_id = ?")
       .get(wB, dashA);
     expect(cross).toBeUndefined();
   });
@@ -168,9 +150,9 @@ describe("widget ownership and storage", () => {
       )
       .run(id, dashA, "clock", "Clock", JSON.stringify(config), now, now);
 
-    const row = ctx.sqlite
-      .prepare("SELECT config FROM widgets WHERE id = ?")
-      .get(id) as { config: string };
+    const row = ctx.sqlite.prepare("SELECT config FROM widgets WHERE id = ?").get(id) as {
+      config: string;
+    };
     expect(JSON.parse(row.config)).toEqual(config);
   });
 
@@ -191,11 +173,7 @@ describe("widget ownership and storage", () => {
       })
       .run();
 
-    const row = ctx.db
-      .select()
-      .from(schema.widgets)
-      .where(eq(schema.widgets.id, id))
-      .get();
+    const row = ctx.db.select().from(schema.widgets).where(eq(schema.widgets.id, id)).get();
     expect(row?.type).toBe("clock");
     expect(JSON.parse(row!.config!)).toEqual(config);
   });
