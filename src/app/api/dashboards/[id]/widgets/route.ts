@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { getOwnedDashboard } from "@/lib/dashboards";
 import { requireAuth } from "@/lib/require-auth";
-import { createWidget, createWidgetSchema, listWidgets } from "@/lib/widgets";
+import {
+  createWidget,
+  createWidgetSchema,
+  listWidgets,
+} from "@/lib/widgets";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -42,6 +47,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const widget = createWidget(dashboard.id, parsed.data);
-  return NextResponse.json({ widget }, { status: 201 });
+  try {
+    const widget = createWidget(dashboard.id, parsed.data);
+    return NextResponse.json({ widget }, { status: 201 });
+  } catch (err) {
+    if (err instanceof ZodError) {
+      const message = err.issues.map((i) => i.message).join("; ");
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+    throw err;
+  }
 }
