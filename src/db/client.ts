@@ -22,7 +22,7 @@ function ensureDir(filePath: string) {
 const dbPath = resolveDatabasePath();
 ensureDir(dbPath);
 
-const sqlite = new Database(dbPath);
+export const sqlite = new Database(dbPath);
 sqlite.pragma("journal_mode = WAL");
 sqlite.pragma("foreign_keys = ON");
 
