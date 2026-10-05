@@ -96,7 +96,9 @@ export function DashboardEditor({
   const [loading, setLoading] = useState(true);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const entriesRef = useRef(entries);
-  entriesRef.current = entries;
+  useEffect(() => {
+    entriesRef.current = entries;
+  });
   const load = useCallback(async () => {
     setError(null);
     try {
@@ -123,8 +125,38 @@ export function DashboardEditor({
     }
   }, [dashboardId]);
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const [wRes, lRes, rRes, dRes] = await Promise.all([
+          apiGet<{ widgets: Widget[] }>(
+            `/api/dashboards/${dashboardId}/widgets`,
+          ),
+          apiGet<{ layouts: LayoutEntry[] }>(
+            `/api/dashboards/${dashboardId}/layout`,
+          ),
+          apiGet<{ widgets: RegistryItem[] }>("/api/widgets/registry"),
+          apiGet<{ dashboard: { name: string } }>(
+            `/api/dashboards/${dashboardId}`,
+          ),
+        ]);
+        if (cancelled) return;
+        setError(null);
+        setWidgets(wRes.widgets);
+        setEntries(lRes.layouts);
+        setRegistry(rRes.widgets);
+        setName(dRes.dashboard.name);
+        setLoading(false);
+      } catch (e) {
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : "加载失败");
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [dashboardId]);
   const widgetIds = useMemo(() => widgets.map((w) => w.id), [widgets]);
   const currentLayout = useMemo(
     () => layoutToGrid(entries, bp, widgetIds),
