@@ -2,8 +2,8 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-005 complete** (Widget CRUD API).  
-Next: **TASK-006** — Widget layout model.
+**Current status: TASK-006 complete** (Layout model API).  
+Next: **TASK-007** — Widget registry.
 
 ## Tech Stack
 
@@ -34,57 +34,57 @@ npm run dev
 
 Open http://localhost:3000
 
+## Layout API (TASK-006)
+
+Auth required. Dashboard must belong to the current user.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/dashboards/[id]/layout` | List all layout entries for this dashboard |
+| `PUT` | `/api/dashboards/[id]/layout` | **Full replace** `{ layouts: [...] }` |
+
+**Full-replace semantics:** `PUT` replaces the entire layout set for the dashboard.
+Entries not included are deleted. An empty `layouts` array clears all layouts.
+Invalid entries reject the whole request (transactional; no partial write).
+
+Each entry: `{ widgetId, breakpoint: desktop|tablet|mobile, x, y, w, h }`  
+(`x,y >= 0`, `w,h >= 1`, integers).
+
 ## Widget API (TASK-005)
 
 All endpoints require auth. Dashboard must belong to the current user (else 404).
 
-| Method   | Path                                      | Description                         |
-| -------- | ----------------------------------------- | ----------------------------------- |
-| `GET`    | `/api/dashboards/[id]/widgets`            | List widgets (created order)        |
-| `POST`   | `/api/dashboards/[id]/widgets`            | Create `{ type, title?, config? }`  |
-| `GET`    | `/api/dashboards/[id]/widgets/[widgetId]` | Get one                             |
-| `PATCH`  | `/api/dashboards/[id]/widgets/[widgetId]` | Update `{ type?, title?, config? }` |
-| `DELETE` | `/api/dashboards/[id]/widgets/[widgetId]` | Delete                              |
-
-`type` whitelist: `clock`, `weather`, `calendar`, `chinese-almanac`, `google-tasks`, `home-assistant-sensor`.  
-`config` is a JSON **object** (or null) at the API boundary.
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/dashboards/[id]/widgets` | List widgets |
+| `POST` | `/api/dashboards/[id]/widgets` | Create `{ type, title?, config? }` |
+| `GET` | `/api/dashboards/[id]/widgets/[widgetId]` | Get one |
+| `PATCH` | `/api/dashboards/[id]/widgets/[widgetId]` | Update |
+| `DELETE` | `/api/dashboards/[id]/widgets/[widgetId]` | Delete |
 
 ## Dashboard API (TASK-004)
 
-All endpoints require an authenticated admin session (cookie). Unauthenticated requests receive `401`.
-
-| Method   | Path                   | Description                              |
-| -------- | ---------------------- | ---------------------------------------- |
-| `GET`    | `/api/dashboards`      | List current user's dashboards           |
-| `POST`   | `/api/dashboards`      | Create `{ name, description? }`          |
-| `GET`    | `/api/dashboards/[id]` | Get one (own only; else 404)             |
-| `PATCH`  | `/api/dashboards/[id]` | Update `{ name?, description? }`         |
-| `DELETE` | `/api/dashboards/[id]` | Delete (cascades widgets/layouts/tokens) |
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/dashboards` | List |
+| `POST` | `/api/dashboards` | Create |
+| `GET` | `/api/dashboards/[id]` | Get one |
+| `PATCH` | `/api/dashboards/[id]` | Update |
+| `DELETE` | `/api/dashboards/[id]` | Delete |
 
 ## Authentication (TASK-003)
 
-Single administrator via encrypted cookie session (`iron-session`).
-
-1. Copy env and set secrets:
-   ```bash
-   cp .env.example .env
-   # SESSION_SECRET — at least 32 chars
-   # ADMIN_EMAIL / ADMIN_PASSWORD — first admin (≥12 chars)
-   ```
-2. Open `/login` to sign in. Admin UI is at `/admin`.
-3. Display routes (`/display/<token>`) do **not** require login.
+Single administrator via `iron-session`. Set `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` in `.env`.
 
 ## Quality Gates
 
 ```bash
 npm install --legacy-peer-deps
-npm run lint
-npm run test
-npm run build
+npm run lint && npx prettier --check . && npm run test && npm run build
 ```
 
 ## Next Steps
 
-- **TASK-006**: Widget layout model
+- **TASK-007**: Widget registry
 
 See the development plan and PRD for the full roadmap.
