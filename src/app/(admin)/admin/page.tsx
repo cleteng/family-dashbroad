@@ -26,9 +26,7 @@ export default async function AdminPage() {
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">看板管理</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            已登录：{user.email}
-          </p>
+          <p className="mt-1 text-sm text-zinc-600">已登录：{user.email}</p>
         </div>
         <form action={logoutAction}>
           <button
