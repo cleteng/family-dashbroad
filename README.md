@@ -2,8 +2,8 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-002 complete** (SQLite + Drizzle data layer).  
-Next: **TASK-003** — Single administrator authentication.
+**Current status: TASK-003 complete** (single-admin session authentication).  
+Next: **TASK-004+** — Dashboard core (vertical slice).
 
 ## Tech Stack
 
@@ -15,6 +15,7 @@ Next: **TASK-003** — Single administrator authentication.
 - ESLint + Prettier
 - Docker / Docker Compose
 - Node.js 24 LTS
+- iron-session (encrypted cookie sessions)
 
 ## Prerequisites
 
@@ -33,22 +34,38 @@ npm run dev
 
 Open http://localhost:3000
 
+## Authentication (TASK-003)
+
+Single administrator via encrypted cookie session (`iron-session`).
+
+1. Copy env and set secrets:
+   ```bash
+   cp .env.example .env
+   # Edit .env:
+   # SESSION_SECRET  — at least 32 chars (openssl rand -base64 32)
+   # ADMIN_EMAIL     — first admin email
+   # ADMIN_PASSWORD  — at least 12 characters
+   ```
+2. On first start (empty `users` table), the app creates the admin from env vars.
+3. Open `/login` to sign in. Admin UI is at `/admin`.
+4. Display routes (`/display/<token>`) do **not** require login.
+
 ### Useful scripts
 
-| Script                 | Description                 |
-| ---------------------- | --------------------------- |
-| `npm run dev`          | Start development server    |
-| `npm run build`        | Production build            |
-| `npm run start`        | Start production server     |
-| `npm run lint`         | ESLint                      |
-| `npm run format`       | Prettier write              |
-| `npm run format:check` | Prettier check              |
-| `npm run test`         | Unit tests (Vitest)         |
-| `npm run test:watch`   | Unit tests watch mode       |
-| `npm run test:e2e`     | Playwright e2e              |
-| `npm run db:generate`  | Generate Drizzle migrations |
-| `npm run db:migrate`   | Apply migrations            |
-| `npm run db:studio`    | Drizzle Studio              |
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | ESLint |
+| `npm run format` | Prettier write |
+| `npm run format:check` | Prettier check |
+| `npm run test` | Unit tests (Vitest) |
+| `npm run test:watch` | Unit tests watch mode |
+| `npm run test:e2e` | Playwright e2e |
+| `npm run db:generate` | Generate Drizzle migrations |
+| `npm run db:migrate` | Apply migrations |
+| `npm run db:studio` | Drizzle Studio |
 
 ## Database
 
@@ -87,11 +104,11 @@ docker compose up -d
 
 ```text
 src/
-  app/           # Next.js App Router (admin, display, api routes later)
+  app/           # Next.js App Router (admin, display, api routes)
   components/    # Shared UI
   db/            # Drizzle client + schema
     schema/      # Table definitions
-  lib/           # Utilities
+  lib/           # Auth, session, utilities
   widgets/       # Widget registry & renderers (later)
   styles/        # Extra CSS
 tests/
@@ -114,7 +131,6 @@ docker compose config
 
 ## Next Steps
 
-- **TASK-003**: Single administrator authentication
-- Then vertical slice: Dashboard → Widget → Layout → Display Token → Display
+- **TASK-004+**: Dashboard core vertical slice (Dashboard → Widget → Layout → Display Token → Display)
 
 See the development plan and PRD for the full roadmap.
