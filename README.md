@@ -2,8 +2,8 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-003 complete** (single-admin session authentication).  
-Next: **TASK-004+** — Dashboard core (vertical slice).
+**Current status: TASK-004 complete** (Dashboard CRUD API).  
+Next: **TASK-005** — Widget model.
 
 ## Tech Stack
 
@@ -34,6 +34,18 @@ npm run dev
 
 Open http://localhost:3000
 
+## Dashboard API (TASK-004)
+
+All endpoints require an authenticated admin session (cookie). Unauthenticated requests receive `401`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/dashboards` | List current user's dashboards |
+| `POST` | `/api/dashboards` | Create `{ name, description? }` |
+| `GET` | `/api/dashboards/[id]` | Get one (own only; else 404) |
+| `PATCH` | `/api/dashboards/[id]` | Update `{ name?, description? }` |
+| `DELETE` | `/api/dashboards/[id]` | Delete (cascades widgets/layouts/tokens) |
+
 ## Authentication (TASK-003)
 
 Single administrator via encrypted cookie session (`iron-session`).
@@ -52,20 +64,20 @@ Single administrator via encrypted cookie session (`iron-session`).
 
 ### Useful scripts
 
-| Script                 | Description                 |
-| ---------------------- | --------------------------- |
-| `npm run dev`          | Start development server    |
-| `npm run build`        | Production build            |
-| `npm run start`        | Start production server     |
-| `npm run lint`         | ESLint                      |
-| `npm run format`       | Prettier write              |
-| `npm run format:check` | Prettier check              |
-| `npm run test`         | Unit tests (Vitest)         |
-| `npm run test:watch`   | Unit tests watch mode       |
-| `npm run test:e2e`     | Playwright e2e              |
-| `npm run db:generate`  | Generate Drizzle migrations |
-| `npm run db:migrate`   | Apply migrations            |
-| `npm run db:studio`    | Drizzle Studio              |
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | ESLint |
+| `npm run format` | Prettier write |
+| `npm run format:check` | Prettier check |
+| `npm run test` | Unit tests (Vitest) |
+| `npm run test:watch` | Unit tests watch mode |
+| `npm run test:e2e` | Playwright e2e |
+| `npm run db:generate` | Generate Drizzle migrations |
+| `npm run db:migrate` | Apply migrations |
+| `npm run db:studio` | Drizzle Studio |
 
 ## Database
 
@@ -92,31 +104,6 @@ docker compose up --build
 - SQLite persists in the named volume mounted at `/data`
 - Default `DATABASE_URL=file:/data/app.db`
 
-Verify persistence:
-
-```bash
-docker compose down
-docker compose up -d
-# database file survives
-```
-
-## Project Structure
-
-```text
-src/
-  app/           # Next.js App Router (admin, display, api routes)
-  components/    # Shared UI
-  db/            # Drizzle client + schema
-    schema/      # Table definitions
-  lib/           # Auth, session, utilities
-  widgets/       # Widget registry & renderers (later)
-  styles/        # Extra CSS
-tests/
-  unit/
-  e2e/
-drizzle/         # Migrations (committed)
-```
-
 ## Quality Gates
 
 ```bash
@@ -124,13 +111,10 @@ npm install --legacy-peer-deps
 npm run lint
 npm run test
 npm run build
-npm run test:e2e
-docker build .
-docker compose config
 ```
 
 ## Next Steps
 
-- **TASK-004+**: Dashboard core vertical slice (Dashboard → Widget → Layout → Display Token → Display)
+- **TASK-005**: Widget model CRUD
 
 See the development plan and PRD for the full roadmap.
