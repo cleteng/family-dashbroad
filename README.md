@@ -2,8 +2,8 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-004 complete** (Dashboard CRUD API).  
-Next: **TASK-005** — Widget model.
+**Current status: TASK-005 complete** (Widget CRUD API).  
+Next: **TASK-006** — Widget layout model.
 
 ## Tech Stack
 
@@ -34,6 +34,21 @@ npm run dev
 
 Open http://localhost:3000
 
+## Widget API (TASK-005)
+
+All endpoints require auth. Dashboard must belong to the current user (else 404).
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/dashboards/[id]/widgets` | List widgets (created order) |
+| `POST` | `/api/dashboards/[id]/widgets` | Create `{ type, title?, config? }` |
+| `GET` | `/api/dashboards/[id]/widgets/[widgetId]` | Get one |
+| `PATCH` | `/api/dashboards/[id]/widgets/[widgetId]` | Update `{ type?, title?, config? }` |
+| `DELETE` | `/api/dashboards/[id]/widgets/[widgetId]` | Delete |
+
+`type` whitelist: `clock`, `weather`, `calendar`, `chinese-almanac`, `google-tasks`, `home-assistant-sensor`.  
+`config` is a JSON **object** (or null) at the API boundary.
+
 ## Dashboard API (TASK-004)
 
 All endpoints require an authenticated admin session (cookie). Unauthenticated requests receive `401`.
@@ -53,56 +68,11 @@ Single administrator via encrypted cookie session (`iron-session`).
 1. Copy env and set secrets:
    ```bash
    cp .env.example .env
-   # Edit .env:
-   # SESSION_SECRET  — at least 32 chars (openssl rand -base64 32)
-   # ADMIN_EMAIL     — first admin email
-   # ADMIN_PASSWORD  — at least 12 characters
+   # SESSION_SECRET — at least 32 chars
+   # ADMIN_EMAIL / ADMIN_PASSWORD — first admin (≥12 chars)
    ```
-2. On first start (empty `users` table), the app creates the admin from env vars.
-3. Open `/login` to sign in. Admin UI is at `/admin`.
-4. Display routes (`/display/<token>`) do **not** require login.
-
-### Useful scripts
-
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Production build |
-| `npm run start` | Start production server |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier write |
-| `npm run format:check` | Prettier check |
-| `npm run test` | Unit tests (Vitest) |
-| `npm run test:watch` | Unit tests watch mode |
-| `npm run test:e2e` | Playwright e2e |
-| `npm run db:generate` | Generate Drizzle migrations |
-| `npm run db:migrate` | Apply migrations |
-| `npm run db:studio` | Drizzle Studio |
-
-## Database
-
-SQLite path is controlled by `DATABASE_URL` (default `file:./data/app.db`).
-
-Core tables (TASK-002):
-
-- `users`
-- `dashboards`
-- `widgets`
-- `widget_layouts` (with CHECK: x>=0, y>=0, w>0, h>0)
-- `display_tokens` (stores only token hash)
-- `integrations` (config and credentials separated)
-
-The `data/` directory is created automatically and is git-ignored.
-
-## Docker
-
-```bash
-docker compose up --build
-```
-
-- App listens on port 3000
-- SQLite persists in the named volume mounted at `/data`
-- Default `DATABASE_URL=file:/data/app.db`
+2. Open `/login` to sign in. Admin UI is at `/admin`.
+3. Display routes (`/display/<token>`) do **not** require login.
 
 ## Quality Gates
 
@@ -115,6 +85,6 @@ npm run build
 
 ## Next Steps
 
-- **TASK-005**: Widget model CRUD
+- **TASK-006**: Widget layout model
 
 See the development plan and PRD for the full roadmap.
