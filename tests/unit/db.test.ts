@@ -62,10 +62,10 @@ describe("TASK-002 Database", () => {
       )
       .get() as { sql: string };
     expect(sql.sql).toContain("CHECK");
-    expect(sql.sql).toMatch(/CHECK(`?widget_layouts`?\.`?x`?\s*>=\s*0)/i);
-    expect(sql.sql).toMatch(/CHECK(`?widget_layouts`?\.`?y`?\s*>=\s*0)/i);
-    expect(sql.sql).toMatch(/CHECK(`?widget_layouts`?\.`?w`?\s*>\s*0)/i);
-    expect(sql.sql).toMatch(/CHECK(`?widget_layouts`?\.`?h`?\s*>\s*0)/i);
+    expect(sql.sql).toContain("CHECK(`widget_layouts`.`x` >= 0)");
+    expect(sql.sql).toContain("CHECK(`widget_layouts`.`y` >= 0)");
+    expect(sql.sql).toContain("CHECK(`widget_layouts`.`w` > 0)");
+    expect(sql.sql).toContain("CHECK(`widget_layouts`.`h` > 0)");
   });
 
   it("can create a user", () => {
