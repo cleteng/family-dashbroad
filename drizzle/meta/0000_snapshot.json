@@ -56,12 +56,8 @@
           "name": "dashboards_user_id_users_id_fk",
           "tableFrom": "dashboards",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -134,9 +130,7 @@
       "indexes": {
         "display_tokens_token_hash_unique": {
           "name": "display_tokens_token_hash_unique",
-          "columns": [
-            "token_hash"
-          ],
+          "columns": ["token_hash"],
           "isUnique": true
         }
       },
@@ -145,12 +139,8 @@
           "name": "display_tokens_dashboard_id_dashboards_id_fk",
           "tableFrom": "display_tokens",
           "tableTo": "dashboards",
-          "columnsFrom": [
-            "dashboard_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["dashboard_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -233,12 +223,8 @@
           "name": "integrations_user_id_users_id_fk",
           "tableFrom": "integrations",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -289,9 +275,7 @@
       "indexes": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },
@@ -370,10 +354,7 @@
       "indexes": {
         "widget_layouts_widget_id_breakpoint_unique": {
           "name": "widget_layouts_widget_id_breakpoint_unique",
-          "columns": [
-            "widget_id",
-            "breakpoint"
-          ],
+          "columns": ["widget_id", "breakpoint"],
           "isUnique": true
         }
       },
@@ -382,12 +363,8 @@
           "name": "widget_layouts_widget_id_widgets_id_fk",
           "tableFrom": "widget_layouts",
           "tableTo": "widgets",
-          "columnsFrom": [
-            "widget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["widget_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -472,12 +449,8 @@
           "name": "widgets_dashboard_id_dashboards_id_fk",
           "tableFrom": "widgets",
           "tableTo": "dashboards",
-          "columnsFrom": [
-            "dashboard_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["dashboard_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

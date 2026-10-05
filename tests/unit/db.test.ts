@@ -57,9 +57,7 @@ describe("TASK-002 Database", () => {
 
   it("migration creates CHECK constraints on widget_layouts", () => {
     const sql = ctx.sqlite
-      .prepare(
-        "SELECT sql FROM sqlite_master WHERE type='table' AND name='widget_layouts'",
-      )
+      .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='widget_layouts'")
       .get() as { sql: string };
     expect(sql.sql).toContain("CHECK");
     expect(sql.sql).toContain("CHECK(`widget_layouts`.`x` >= 0)");
@@ -217,11 +215,7 @@ describe("TASK-002 Database", () => {
       })
       .run();
 
-    const row = ctx.db
-      .select()
-      .from(widgetLayouts)
-      .where(eq(widgetLayouts.id, layoutId))
-      .get();
+    const row = ctx.db.select().from(widgetLayouts).where(eq(widgetLayouts.id, layoutId)).get();
     expect(row?.breakpoint).toBe("desktop");
     expect(row?.w).toBe(4);
   });

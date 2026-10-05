@@ -13,6 +13,7 @@ Family Dashboard is an open-source, self-hosted family information center.
 Goal: turn old iPads / phones / tablets into always-on family displays.
 
 Core architecture (Web-first):
+
 - **Display**: Full-screen responsive web dashboard
 - **Admin**: Responsive web admin (mobile / tablet / desktop)
 - **Backend**: Unified API + data services
@@ -58,18 +59,18 @@ TASK-001 = Project Foundation only. No business features implemented.
 
 From TASK-001 spec:
 
-| Item | Decision |
-|------|----------|
-| Framework | Next.js 16 + App Router |
-| Language | TypeScript (strict) |
-| Package manager | npm |
-| CSS | Tailwind CSS |
-| Database | SQLite + Drizzle + better-sqlite3 |
-| Validation | Zod |
-| Testing | Vitest (unit) + Playwright (e2e) |
-| Node | 24 LTS |
-| Git branch | `main` |
-| Feature branches | `feat/TASK-xxx-description` |
+| Item             | Decision                          |
+| ---------------- | --------------------------------- |
+| Framework        | Next.js 16 + App Router           |
+| Language         | TypeScript (strict)               |
+| Package manager  | npm                               |
+| CSS              | Tailwind CSS                      |
+| Database         | SQLite + Drizzle + better-sqlite3 |
+| Validation       | Zod                               |
+| Testing          | Vitest (unit) + Playwright (e2e)  |
+| Node             | 24 LTS                            |
+| Git branch       | `main`                            |
+| Feature branches | `feat/TASK-xxx-description`       |
 
 **Note**: Earlier Development Plan mentioned PostgreSQL. TASK-001 explicitly froze on SQLite. Keep SQLite unless there is a strong reason to change later.
 
@@ -152,11 +153,13 @@ family-dashboard/
 ## 7. Next Tasks (from Development Plan)
 
 ### TASK-002 — SQLite + Drizzle schema foundation
+
 - Proper schema design
 - Migrations
 - Basic tables needed for later Dashboard / Widget / etc.
 
 ### TASK-003 — Single administrator authentication
+
 - Login / logout / session
 - Protect admin routes
 - Display must **not** depend on admin session
