@@ -2,12 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { getOwnedDashboard } from "@/lib/dashboards";
 import { requireAuth } from "@/lib/require-auth";
-import {
-  deleteWidget,
-  getWidget,
-  updateWidget,
-  updateWidgetSchema,
-} from "@/lib/widgets";
+import { deleteWidget, getWidget, updateWidget, updateWidgetSchema } from "@/lib/widgets";
 
 type RouteContext = {
   params: Promise<{ id: string; widgetId: string }>;

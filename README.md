@@ -43,16 +43,16 @@ Built-in widgets under `src/widgets/`. Currently: **Clock**.
 
 ### Registry API
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/widgets/registry` | List `{ type, metadata, defaultConfig }` (auth required) |
+| Method | Path                    | Description                                              |
+| ------ | ----------------------- | -------------------------------------------------------- |
+| `GET`  | `/api/widgets/registry` | List `{ type, metadata, defaultConfig }` (auth required) |
 
 ## Layout API (TASK-006)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/dashboards/[id]/layout` | List layouts |
-| `PUT` | `/api/dashboards/[id]/layout` | **Full replace** `{ layouts: [...] }` |
+| Method | Path                          | Description                           |
+| ------ | ----------------------------- | ------------------------------------- |
+| `GET`  | `/api/dashboards/[id]/layout` | List layouts                          |
+| `PUT`  | `/api/dashboards/[id]/layout` | **Full replace** `{ layouts: [...] }` |
 
 ## Widget API (TASK-005)
 

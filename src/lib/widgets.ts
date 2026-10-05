@@ -3,11 +3,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { widgets } from "@/db/schema/widgets";
 
-import {
-  CLOCK_TYPE,
-  clockConfigSchema,
-  clockDefaultConfig,
-} from "@/widgets/clock/config";
+import { CLOCK_TYPE, clockConfigSchema, clockDefaultConfig } from "@/widgets/clock/config";
 
 /** Server-safe config registries (no React). Extend when adding widgets. */
 const REGISTERED_CONFIG = {
@@ -111,10 +107,7 @@ export const updateWidgetSchema = z
     config: configSchema,
   })
   .refine(
-    (data) =>
-      data.type !== undefined ||
-      data.title !== undefined ||
-      data.config !== undefined,
+    (data) => data.type !== undefined || data.title !== undefined || data.config !== undefined,
     { message: "At least one of type, title, or config is required" },
   );
 
@@ -164,10 +157,7 @@ export function listWidgets(dashboardId: string): Widget[] {
   return rows.map(toWidget);
 }
 
-export function createWidget(
-  dashboardId: string,
-  input: CreateWidgetInput,
-): Widget {
+export function createWidget(dashboardId: string, input: CreateWidgetInput): Widget {
   const id = crypto.randomUUID();
   const now = new Date();
   const title = input.title === undefined ? null : input.title;
@@ -191,10 +181,7 @@ export function createWidget(
   return toWidget(row);
 }
 
-export function getWidget(
-  dashboardId: string,
-  widgetId: string,
-): Widget | null {
+export function getWidget(dashboardId: string, widgetId: string): Widget | null {
   const row = db
     .select()
     .from(widgets)
@@ -222,8 +209,7 @@ export function updateWidget(
   if (input.title !== undefined) patch.title = input.title;
   if (input.config !== undefined || input.type !== undefined) {
     const nextType = input.type ?? existing.type;
-    const nextConfig =
-      input.config !== undefined ? input.config : existing.config;
+    const nextConfig = input.config !== undefined ? input.config : existing.config;
     const resolved = resolveRegisteredConfig(nextType, nextConfig);
     patch.config = resolved === null ? null : JSON.stringify(resolved);
   }
@@ -236,10 +222,7 @@ export function updateWidget(
   return getWidget(dashboardId, widgetId);
 }
 
-export function deleteWidget(
-  dashboardId: string,
-  widgetId: string,
-): boolean {
+export function deleteWidget(dashboardId: string, widgetId: string): boolean {
   const existing = getWidget(dashboardId, widgetId);
   if (!existing) return false;
 

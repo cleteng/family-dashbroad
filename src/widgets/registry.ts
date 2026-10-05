@@ -6,9 +6,7 @@ export function registerWidget(def: WidgetDefinition): void {
   registry.set(def.type, def);
 }
 
-export function getWidgetDefinition(
-  type: string,
-): WidgetDefinition | undefined {
+export function getWidgetDefinition(type: string): WidgetDefinition | undefined {
   return registry.get(type);
 }
 
@@ -17,9 +15,7 @@ export function listWidgetDefinitions(): WidgetDefinition[] {
 }
 
 /** Config-only view for server validation / registry API (no components). */
-export function getWidgetConfigDefinition(
-  type: string,
-): WidgetConfigDefinition | undefined {
+export function getWidgetConfigDefinition(type: string): WidgetConfigDefinition | undefined {
   const def = registry.get(type);
   if (!def) return undefined;
   return {

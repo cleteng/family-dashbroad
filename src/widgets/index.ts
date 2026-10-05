@@ -20,8 +20,4 @@ export {
 } from "./registry";
 export type { WidgetDefinition, WidgetConfigDefinition } from "./types";
 export { clockDefinition } from "./clock/definition";
-export {
-  clockConfigSchema,
-  clockDefaultConfig,
-  mergeClockConfig,
-} from "./clock/config";
+export { clockConfigSchema, clockDefaultConfig, mergeClockConfig } from "./clock/config";

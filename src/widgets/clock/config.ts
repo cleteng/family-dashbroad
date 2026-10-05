@@ -37,9 +37,7 @@ export type ClockConfig = {
   showDate: boolean;
 };
 
-export function mergeClockConfig(
-  partial: Record<string, unknown> | null | undefined,
-): ClockConfig {
+export function mergeClockConfig(partial: Record<string, unknown> | null | undefined): ClockConfig {
   const base = { ...clockDefaultConfig, ...(partial ?? {}) };
   const parsed = clockConfigSchema.parse(base);
   return {

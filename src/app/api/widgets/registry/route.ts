@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
-import {
-  CLOCK_TYPE,
-  clockDefaultConfig,
-} from "@/widgets/clock/config";
+import { CLOCK_TYPE, clockDefaultConfig } from "@/widgets/clock/config";
 
 /**
  * GET /api/widgets/registry — list registered widgets (type, metadata, defaultConfig).

@@ -1,34 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  clockDefaultConfig,
-  type ClockConfig,
-} from "./config";
+import { clockDefaultConfig, type ClockConfig } from "./config";
 
 function resolveConfig(raw: Record<string, unknown>): ClockConfig {
   return {
-    timezone:
-      typeof raw.timezone === "string"
-        ? raw.timezone
-        : clockDefaultConfig.timezone,
+    timezone: typeof raw.timezone === "string" ? raw.timezone : clockDefaultConfig.timezone,
     format: raw.format === "12h" || raw.format === "24h" ? raw.format : "24h",
     showSeconds:
-      typeof raw.showSeconds === "boolean"
-        ? raw.showSeconds
-        : clockDefaultConfig.showSeconds,
-    showDate:
-      typeof raw.showDate === "boolean"
-        ? raw.showDate
-        : clockDefaultConfig.showDate,
+      typeof raw.showSeconds === "boolean" ? raw.showSeconds : clockDefaultConfig.showSeconds,
+    showDate: typeof raw.showDate === "boolean" ? raw.showDate : clockDefaultConfig.showDate,
   };
 }
 
-export function ClockRenderer({
-  config,
-}: {
-  config: Record<string, unknown>;
-}) {
+export function ClockRenderer({ config }: { config: Record<string, unknown> }) {
   const cfg = useMemo(() => resolveConfig(config), [config]);
   const [now, setNow] = useState(() => new Date());
 
@@ -66,12 +51,8 @@ export function ClockRenderer({
 
   return (
     <div className="flex flex-col items-center justify-center gap-1 p-4 text-center">
-      <div className="font-mono text-3xl font-semibold tracking-tight tabular-nums">
-        {timeText}
-      </div>
-      {cfg.showDate && dateText ? (
-        <div className="text-sm text-zinc-500">{dateText}</div>
-      ) : null}
+      <div className="font-mono text-3xl font-semibold tracking-tight tabular-nums">{timeText}</div>
+      {cfg.showDate && dateText ? <div className="text-sm text-zinc-500">{dateText}</div> : null}
     </div>
   );
 }

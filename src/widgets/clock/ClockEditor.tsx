@@ -12,31 +12,21 @@ const SUGGESTED_TIMEZONES = [
   "UTC",
 ];
 
-function resolve(
-  config: Record<string, unknown>,
-): {
+function resolve(config: Record<string, unknown>): {
   timezone: string;
   format: "12h" | "24h";
   showSeconds: boolean;
   showDate: boolean;
 } {
   return {
-    timezone:
-      typeof config.timezone === "string"
-        ? config.timezone
-        : clockDefaultConfig.timezone,
+    timezone: typeof config.timezone === "string" ? config.timezone : clockDefaultConfig.timezone,
     format:
       config.format === "12h" || config.format === "24h"
         ? config.format
         : clockDefaultConfig.format,
     showSeconds:
-      typeof config.showSeconds === "boolean"
-        ? config.showSeconds
-        : clockDefaultConfig.showSeconds,
-    showDate:
-      typeof config.showDate === "boolean"
-        ? config.showDate
-        : clockDefaultConfig.showDate,
+      typeof config.showSeconds === "boolean" ? config.showSeconds : clockDefaultConfig.showSeconds,
+    showDate: typeof config.showDate === "boolean" ? config.showDate : clockDefaultConfig.showDate,
   };
 }
 
