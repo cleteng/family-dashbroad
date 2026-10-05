@@ -78,9 +78,9 @@ describe("migration still works with auth tests present", () => {
     sqlite.pragma("foreign_keys = ON");
     const db = drizzle(sqlite, { schema });
     migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") });
-    const tables = sqlite
-      .prepare("SELECT name FROM sqlite_master WHERE type='table'")
-      .all() as { name: string }[];
+    const tables = sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as {
+      name: string;
+    }[];
     expect(tables.map((t) => t.name)).toContain("users");
     sqlite.close();
     fs.rmSync(dir, { recursive: true, force: true });

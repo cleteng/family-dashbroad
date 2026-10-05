@@ -16,9 +16,6 @@ export async function register() {
   } catch (err) {
     // Log clearly; do not crash the whole process on empty DB without env —
     // login path will surface the same requirement.
-    console.error(
-      "[auth] Bootstrap:",
-      err instanceof Error ? err.message : err,
-    );
+    console.error("[auth] Bootstrap:", err instanceof Error ? err.message : err);
   }
 }

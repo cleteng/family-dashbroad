@@ -75,18 +75,11 @@ export function ensureAdminUser(): AuthUser | null {
  * Authenticate by email + password. Returns user or null.
  * Does not distinguish missing user vs wrong password (caller should use generic message).
  */
-export function authenticateUser(
-  email: string,
-  password: string,
-): AuthUser | null {
+export function authenticateUser(email: string, password: string): AuthUser | null {
   const normalized = email.trim().toLowerCase();
   if (!normalized || !password) return null;
 
-  const row = db
-    .select()
-    .from(users)
-    .where(eq(users.email, normalized))
-    .get();
+  const row = db.select().from(users).where(eq(users.email, normalized)).get();
 
   if (!row) return null;
   if (!verifyPassword(password, row.passwordHash)) return null;

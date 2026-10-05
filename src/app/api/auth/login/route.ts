@@ -45,18 +45,12 @@ export async function POST(request: NextRequest) {
 
     const parsed = bodySchema.safeParse(json);
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "邮箱或密码错误" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "邮箱或密码错误" }, { status: 401 });
     }
 
     const user = authenticateUser(parsed.data.email, parsed.data.password);
     if (!user) {
-      return NextResponse.json(
-        { error: "邮箱或密码错误" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "邮箱或密码错误" }, { status: 401 });
     }
 
     const session = await getSession();

@@ -52,20 +52,20 @@ Single administrator via encrypted cookie session (`iron-session`).
 
 ### Useful scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Production build |
-| `npm run start` | Start production server |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier write |
-| `npm run format:check` | Prettier check |
-| `npm run test` | Unit tests (Vitest) |
-| `npm run test:watch` | Unit tests watch mode |
-| `npm run test:e2e` | Playwright e2e |
-| `npm run db:generate` | Generate Drizzle migrations |
-| `npm run db:migrate` | Apply migrations |
-| `npm run db:studio` | Drizzle Studio |
+| Script                 | Description                 |
+| ---------------------- | --------------------------- |
+| `npm run dev`          | Start development server    |
+| `npm run build`        | Production build            |
+| `npm run start`        | Start production server     |
+| `npm run lint`         | ESLint                      |
+| `npm run format`       | Prettier write              |
+| `npm run format:check` | Prettier check              |
+| `npm run test`         | Unit tests (Vitest)         |
+| `npm run test:watch`   | Unit tests watch mode       |
+| `npm run test:e2e`     | Playwright e2e              |
+| `npm run db:generate`  | Generate Drizzle migrations |
+| `npm run db:migrate`   | Apply migrations            |
+| `npm run db:studio`    | Drizzle Studio              |
 
 ## Database
 
