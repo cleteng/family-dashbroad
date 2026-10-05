@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  createDashboard,
-  createDashboardSchema,
-  listDashboards,
-} from "@/lib/dashboards";
+import { createDashboard, createDashboardSchema, listDashboards } from "@/lib/dashboards";
 import { requireAuth } from "@/lib/require-auth";
 
 export async function GET() {

@@ -84,14 +84,10 @@ export function listDashboards(userId: string): Dashboard[] {
   return rows.map(toDashboard);
 }
 
-export function createDashboard(
-  userId: string,
-  input: CreateDashboardInput,
-): Dashboard {
+export function createDashboard(userId: string, input: CreateDashboardInput): Dashboard {
   const id = crypto.randomUUID();
   const now = new Date();
-  const description =
-    input.description === undefined ? null : input.description;
+  const description = input.description === undefined ? null : input.description;
 
   db.insert(dashboards)
     .values({

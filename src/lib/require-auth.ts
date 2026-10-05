@@ -10,9 +10,7 @@ export type AuthedSession = {
  * Require a logged-in session for API routes.
  * Returns { session } or a 401 NextResponse.
  */
-export async function requireAuth(): Promise<
-  { session: AuthedSession } | { error: NextResponse }
-> {
+export async function requireAuth(): Promise<{ session: AuthedSession } | { error: NextResponse }> {
   try {
     const session = await getSession();
     if (!session.isLoggedIn || !session.userId) {

@@ -9,10 +9,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema";
 import { users } from "@/db/schema/users";
 import { widgets } from "@/db/schema/widgets";
-import {
-  createDashboardSchema,
-  updateDashboardSchema,
-} from "@/lib/dashboards";
+import { createDashboardSchema, updateDashboardSchema } from "@/lib/dashboards";
 
 function createTestDb() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fd-dash-"));
@@ -75,22 +72,14 @@ describe("dashboards service", () => {
 
   it("createDashboardSchema rejects empty or too-long name", () => {
     expect(createDashboardSchema.safeParse({ name: "" }).success).toBe(false);
-    expect(createDashboardSchema.safeParse({ name: "   " }).success).toBe(
-      false,
-    );
-    expect(
-      createDashboardSchema.safeParse({ name: "x".repeat(101) }).success,
-    ).toBe(false);
+    expect(createDashboardSchema.safeParse({ name: "   " }).success).toBe(false);
+    expect(createDashboardSchema.safeParse({ name: "x".repeat(101) }).success).toBe(false);
   });
 
   it("updateDashboardSchema requires at least one field", () => {
     expect(updateDashboardSchema.safeParse({}).success).toBe(false);
-    expect(
-      updateDashboardSchema.safeParse({ name: "New Name" }).success,
-    ).toBe(true);
-    expect(
-      updateDashboardSchema.safeParse({ description: null }).success,
-    ).toBe(true);
+    expect(updateDashboardSchema.safeParse({ name: "New Name" }).success).toBe(true);
+    expect(updateDashboardSchema.safeParse({ description: null }).success).toBe(true);
   });
 
   it("ownership: user only sees own dashboards (SQL pattern)", () => {
@@ -108,9 +97,9 @@ describe("dashboards service", () => {
       )
       .run(idB, userB, "B Board", null, now, now);
 
-    const aRows = ctx.sqlite
-      .prepare("SELECT id FROM dashboards WHERE user_id = ?")
-      .all(userA) as { id: string }[];
+    const aRows = ctx.sqlite.prepare("SELECT id FROM dashboards WHERE user_id = ?").all(userA) as {
+      id: string;
+    }[];
     expect(aRows.map((r) => r.id)).toEqual([idA]);
 
     const cross = ctx.sqlite
@@ -136,9 +125,7 @@ describe("dashboards service", () => {
 
     ctx.sqlite.prepare("DELETE FROM dashboards WHERE id = ?").run(dashId);
 
-    const w = ctx.sqlite
-      .prepare("SELECT id FROM widgets WHERE id = ?")
-      .get(widgetId);
+    const w = ctx.sqlite.prepare("SELECT id FROM widgets WHERE id = ?").get(widgetId);
     expect(w).toBeUndefined();
   });
 
@@ -224,11 +211,7 @@ describe("dashboards service with isolated db client", () => {
       })
       .run();
     localDb.delete(schema.dashboards).where(eq(schema.dashboards.id, id)).run();
-    const gone = localDb
-      .select()
-      .from(widgets)
-      .where(eq(widgets.id, widgetId))
-      .get();
+    const gone = localDb.select().from(widgets).where(eq(widgets.id, widgetId)).get();
     expect(gone).toBeUndefined();
 
     sqlite.close();
