@@ -28,4 +28,5 @@ ENV HOSTNAME=0.0.0.0
 USER node
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+# next.config has output: "standalone" — must run the standalone server
+CMD ["node", ".next/standalone/server.js"]
