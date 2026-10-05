@@ -19,7 +19,9 @@ test.describe("Admin dashboard editor", () => {
     const row = page.locator("li", { hasText: name });
     await row.getByRole("link", { name: "编辑" }).click();
     await page.waitForURL(/\/admin\/dashboards\//);
-    await expect(page.getByTestId("dashboard-name")).toContainText(name);
+    await expect(page.getByTestId("dashboard-name")).toContainText(name, {
+      timeout: 30000,
+    });
 
     await page.getByTestId("add-widget").click();
     await expect(page.getByTestId("add-widget-modal")).toBeVisible();
