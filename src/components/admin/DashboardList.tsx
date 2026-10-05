@@ -31,8 +31,26 @@ export function DashboardList() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await apiGet<{ dashboards: Dashboard[] }>(
+          "/api/dashboards",
+        );
+        if (cancelled) return;
+        setError(null);
+        setDashboards(data.dashboards);
+        setLoading(false);
+      } catch (e) {
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : "加载失败");
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
