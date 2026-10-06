@@ -42,10 +42,23 @@ export function WeatherRenderer({
   }, [cfg.postalCode, cfg.forecastDays]);
 
   useEffect(() => {
-    void load();
-    // Refresh every 15 minutes (matches data-layer cache TTL)
-    const id = setInterval(() => void load(), 15 * 60 * 1000);
-    return () => clearInterval(id);
+    let cancelled = false;
+    // Defer so setState inside load is not synchronous with the effect body
+    // (avoids react-hooks/set-state-in-effect cascading-render lint).
+    const start = setTimeout(() => {
+      if (!cancelled) void load();
+    }, 0);
+    const id = setInterval(
+      () => {
+        if (!cancelled) void load();
+      },
+      15 * 60 * 1000,
+    );
+    return () => {
+      cancelled = true;
+      clearTimeout(start);
+      clearInterval(id);
+    };
   }, [load]);
 
   return <WeatherView data={data} error={error} loading={loading} />;
