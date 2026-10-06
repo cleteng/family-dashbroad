@@ -2,8 +2,8 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-014 complete** (weather data layer — Open-Meteo, cache, stale fallback).  
-Next: TASK-015 weather widget UI.
+**Current status: TASK-015 complete** (weather widget — current + forecast, Open-Meteo).  
+Next: further product tasks as planned.
 
 ## Tech Stack
 
