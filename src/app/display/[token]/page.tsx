@@ -6,6 +6,9 @@ import {
 import { DisplayBoard } from "@/components/display/DisplayBoard";
 import { DisplayError } from "@/components/display/DisplayError";
 
+/** Never cache: token enable/disable must take effect on next request. */
+export const dynamic = "force-dynamic";
+
 type PageProps = { params: Promise<{ token: string }> };
 
 export default async function DisplayPage({ params }: PageProps) {
