@@ -360,7 +360,7 @@ export function DashboardEditor({
                     data-testid={`widget-card-${w.id}`}
                   >
                     <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50 px-2 py-1 text-xs text-zinc-600">
-                      <span className="widget-drag-handle flex-1 cursor-move select-none py-0.5">
+                      <span className="widget-drag-handle flex-1 cursor-move py-0.5 select-none">
                         {def?.metadata.name ?? w.type}
                       </span>
                       <span className="flex gap-1">
