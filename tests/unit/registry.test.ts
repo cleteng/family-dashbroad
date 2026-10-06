@@ -8,7 +8,11 @@ import {
   CLOCK_TYPE,
 } from "@/widgets/clock/config";
 import { ClockRenderer } from "@/widgets/clock/ClockRenderer";
-import { registerWidget, getWidgetDefinition, listWidgetDefinitions } from "@/widgets/registry";
+import {
+  registerWidget,
+  getWidgetDefinition,
+  listWidgetDefinitions,
+} from "@/widgets/registry";
 import { clockDefinition } from "@/widgets/clock/definition";
 import { resolveRegisteredConfig } from "@/lib/widgets";
 
@@ -66,11 +70,15 @@ describe("resolveRegisteredConfig", () => {
   });
 
   it("clock invalid timezone throws", () => {
-    expect(() => resolveRegisteredConfig(CLOCK_TYPE, { timezone: "Mars/Olympus" })).toThrow();
+    expect(() =>
+      resolveRegisteredConfig(CLOCK_TYPE, { timezone: "Mars/Olympus" }),
+    ).toThrow();
   });
 
   it("unregistered type passes through plain object", () => {
-    const resolved = resolveRegisteredConfig("weather", { city: "Toronto" });
+    const resolved = resolveRegisteredConfig("__not_a_real_widget__", {
+      city: "Toronto",
+    });
     expect(resolved).toEqual({ city: "Toronto" });
   });
 });
