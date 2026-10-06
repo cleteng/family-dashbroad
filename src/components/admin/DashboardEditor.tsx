@@ -3,10 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import GridLayout, { type Layout } from "react-grid-layout";
 import { apiGet, apiSend } from "@/lib/api-client";
-import {
-  getWidgetDefinition,
-  registerWidget,
-} from "@/widgets/registry";
+import { getWidgetDefinition, registerWidget } from "@/widgets/registry";
 import { clockDefinition } from "@/widgets/clock/definition";
 import type { Breakpoint } from "@/lib/layouts";
 import "react-grid-layout/css/styles.css";
@@ -40,11 +37,7 @@ const BP_UI: { key: Breakpoint; label: string; width: number }[] = [
   { key: "mobile", label: "手机", width: 390 },
 ];
 const COLS = 12;
-function layoutToGrid(
-  entries: LayoutEntry[],
-  bp: Breakpoint,
-  widgetIds: string[],
-): Layout[] {
+function layoutToGrid(entries: LayoutEntry[], bp: Breakpoint, widgetIds: string[]): Layout[] {
   const forBp = entries.filter((e) => e.breakpoint === bp);
   const byId = new Map(forBp.map((e) => [e.widgetId, e]));
   return widgetIds.map((id, idx) => {
@@ -56,9 +49,7 @@ function layoutToGrid(
     return { i: id, x: 0, y: idx * 3, w: 4, h: 3 };
   });
 }
-function gridToEntries(
-  layoutsByBp: Record<Breakpoint, Layout[]>,
-): LayoutEntry[] {
+function gridToEntries(layoutsByBp: Record<Breakpoint, Layout[]>): LayoutEntry[] {
   const out: LayoutEntry[] = [];
   for (const bp of ["desktop", "tablet", "mobile"] as Breakpoint[]) {
     for (const item of layoutsByBp[bp] ?? []) {
@@ -90,9 +81,7 @@ export function DashboardEditor({
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [settingsWidget, setSettingsWidget] = useState<Widget | null>(null);
-  const [settingsDraft, setSettingsDraft] = useState<Record<string, unknown>>(
-    {},
-  );
+  const [settingsDraft, setSettingsDraft] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const entriesRef = useRef(entries);
@@ -103,16 +92,10 @@ export function DashboardEditor({
     setError(null);
     try {
       const [wRes, lRes, rRes, dRes] = await Promise.all([
-        apiGet<{ widgets: Widget[] }>(
-          `/api/dashboards/${dashboardId}/widgets`,
-        ),
-        apiGet<{ layouts: LayoutEntry[] }>(
-          `/api/dashboards/${dashboardId}/layout`,
-        ),
+        apiGet<{ widgets: Widget[] }>(`/api/dashboards/${dashboardId}/widgets`),
+        apiGet<{ layouts: LayoutEntry[] }>(`/api/dashboards/${dashboardId}/layout`),
         apiGet<{ widgets: RegistryItem[] }>("/api/widgets/registry"),
-        apiGet<{ dashboard: { name: string } }>(
-          `/api/dashboards/${dashboardId}`,
-        ),
+        apiGet<{ dashboard: { name: string } }>(`/api/dashboards/${dashboardId}`),
       ]);
       setWidgets(wRes.widgets);
       setEntries(lRes.layouts);
@@ -129,16 +112,10 @@ export function DashboardEditor({
     (async () => {
       try {
         const [wRes, lRes, rRes, dRes] = await Promise.all([
-          apiGet<{ widgets: Widget[] }>(
-            `/api/dashboards/${dashboardId}/widgets`,
-          ),
-          apiGet<{ layouts: LayoutEntry[] }>(
-            `/api/dashboards/${dashboardId}/layout`,
-          ),
+          apiGet<{ widgets: Widget[] }>(`/api/dashboards/${dashboardId}/widgets`),
+          apiGet<{ layouts: LayoutEntry[] }>(`/api/dashboards/${dashboardId}/layout`),
           apiGet<{ widgets: RegistryItem[] }>("/api/widgets/registry"),
-          apiGet<{ dashboard: { name: string } }>(
-            `/api/dashboards/${dashboardId}`,
-          ),
+          apiGet<{ dashboard: { name: string } }>(`/api/dashboards/${dashboardId}`),
         ]);
         if (cancelled) return;
         setError(null);
@@ -162,8 +139,7 @@ export function DashboardEditor({
     () => layoutToGrid(entries, bp, widgetIds),
     [entries, bp, widgetIds],
   );
-  const containerWidth =
-    BP_UI.find((b) => b.key === bp)?.width ?? 1200;
+  const containerWidth = BP_UI.find((b) => b.key === bp)?.width ?? 1200;
   const persistLayout = useCallback(
     async (nextEntries: LayoutEntry[]) => {
       setSaveState("saving");
@@ -235,10 +211,7 @@ export function DashboardEditor({
       setWidgets((prev) => [...prev, widget]);
       // Place at bottom for all breakpoints
       const maxY = (bpKey: Breakpoint) => {
-        const items = layoutToGrid(entriesRef.current, bpKey, [
-          ...widgetIds,
-          widget.id,
-        ]);
+        const items = layoutToGrid(entriesRef.current, bpKey, [...widgetIds, widget.id]);
         return items.reduce((m, it) => Math.max(m, it.y + it.h), 0);
       };
       const next: LayoutEntry[] = [...entriesRef.current];
@@ -263,10 +236,7 @@ export function DashboardEditor({
       return;
     }
     try {
-      await apiSend(
-        `/api/dashboards/${dashboardId}/widgets/${widget.id}`,
-        "DELETE",
-      );
+      await apiSend(`/api/dashboards/${dashboardId}/widgets/${widget.id}`, "DELETE");
       setWidgets((prev) => prev.filter((w) => w.id !== widget.id));
       const next = entriesRef.current.filter((e) => e.widgetId !== widget.id);
       setEntries(next);
@@ -287,9 +257,7 @@ export function DashboardEditor({
         "PATCH",
         { config: settingsDraft },
       );
-      setWidgets((prev) =>
-        prev.map((w) => (w.id === res.widget.id ? res.widget : w)),
-      );
+      setWidgets((prev) => prev.map((w) => (w.id === res.widget.id ? res.widget : w)));
       setSettingsWidget(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "设置保存失败");
@@ -310,10 +278,7 @@ export function DashboardEditor({
     <div className="flex min-h-screen flex-col bg-zinc-50">
       <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
-          <Link
-            href="/admin"
-            className="text-sm text-zinc-500 hover:text-zinc-800"
-          >
+          <Link href="/admin" className="text-sm text-zinc-500 hover:text-zinc-800">
             ← 看板列表
           </Link>
           <button
@@ -427,9 +392,7 @@ export function DashboardEditor({
                       {Renderer ? (
                         <Renderer config={w.config ?? {}} />
                       ) : (
-                        <div className="p-4 text-sm text-zinc-400">
-                          {w.type}（暂无预览）
-                        </div>
+                        <div className="p-4 text-sm text-zinc-400">{w.type}（暂无预览）</div>
                       )}
                     </div>
                   </div>
@@ -465,9 +428,7 @@ export function DashboardEditor({
                     data-testid={`add-type-${item.type}`}
                   >
                     <div className="font-medium">{item.metadata.name}</div>
-                    <div className="text-xs text-zinc-500">
-                      {item.metadata.description}
-                    </div>
+                    <div className="text-xs text-zinc-500">{item.metadata.description}</div>
                   </button>
                 </li>
               ))}
@@ -495,13 +456,9 @@ export function DashboardEditor({
               const def = getWidgetDefinition(settingsWidget.type);
               const Editor = def?.editor;
               if (!Editor) {
-                return (
-                  <p className="text-sm text-zinc-500">此类型暂无设置面板</p>
-                );
+                return <p className="text-sm text-zinc-500">此类型暂无设置面板</p>;
               }
-              return (
-                <Editor config={settingsDraft} onChange={setSettingsDraft} />
-              );
+              return <Editor config={settingsDraft} onChange={setSettingsDraft} />;
             })()}
             <div className="mt-4 flex justify-end gap-2">
               <button

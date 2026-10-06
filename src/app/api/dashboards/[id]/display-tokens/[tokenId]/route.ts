@@ -3,10 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { displayTokens } from "@/db/schema/display-tokens";
 import { getOwnedDashboard } from "@/lib/dashboards";
-import {
-  deleteDisplayToken,
-  setDisplayTokenActive,
-} from "@/lib/display-tokens";
+import { deleteDisplayToken, setDisplayTokenActive } from "@/lib/display-tokens";
 import { requireAuth } from "@/lib/require-auth";
 import { z } from "zod";
 
@@ -31,12 +28,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   const owned = db
     .select({ id: displayTokens.id })
     .from(displayTokens)
-    .where(
-      and(
-        eq(displayTokens.id, tokenId),
-        eq(displayTokens.dashboardId, dashboard.id),
-      ),
-    )
+    .where(and(eq(displayTokens.id, tokenId), eq(displayTokens.dashboardId, dashboard.id)))
     .get();
   if (!owned) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -51,10 +43,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: "isActive boolean required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "isActive boolean required" }, { status: 400 });
   }
 
   setDisplayTokenActive(tokenId, parsed.data.isActive);

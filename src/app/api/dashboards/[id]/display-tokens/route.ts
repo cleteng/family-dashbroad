@@ -61,10 +61,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const result = createDisplayTokenForDashboard(
-    dashboard.id,
-    parsed.data.name ?? null,
-  );
+  const result = createDisplayTokenForDashboard(dashboard.id, parsed.data.name ?? null);
 
   return NextResponse.json(
     {

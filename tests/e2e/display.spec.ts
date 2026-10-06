@@ -4,10 +4,7 @@ const email = process.env.ADMIN_EMAIL || "admin@example.com";
 const password = process.env.ADMIN_PASSWORD || "adminpassword12";
 
 test.describe("Display renderer", () => {
-  test("valid token shows clock; disabled and invalid show errors", async ({
-    page,
-    browser,
-  }) => {
+  test("valid token shows clock; disabled and invalid show errors", async ({ page, browser }) => {
     await page.goto("/login");
     await page.getByLabel("邮箱").fill(email);
     await page.getByLabel("密码").fill(password);
@@ -30,16 +27,17 @@ test.describe("Display renderer", () => {
     const dashId = dashUrl.split("/admin/dashboards/")[1]?.split(/[?#]/)[0];
     expect(dashId).toBeTruthy();
 
+    // Add clock via UI
     await page.getByTestId("add-widget").click();
     await page.getByTestId("add-type-clock").click();
     await expect(page.locator("[data-testid^=widget-card-]")).toHaveCount(1, {
       timeout: 15000,
     });
 
-    const tokenRes = await page.request.post(
-      `/api/dashboards/${dashId}/display-tokens`,
-      { data: { name: "e2e" } },
-    );
+    // Create display token via API (cookie from page context)
+    const tokenRes = await page.request.post(`/api/dashboards/${dashId}/display-tokens`, {
+      data: { name: "e2e" },
+    });
     expect(tokenRes.ok()).toBeTruthy();
     const tokenBody = (await tokenRes.json()) as {
       token: string;
@@ -49,16 +47,18 @@ test.describe("Display renderer", () => {
     expect(tokenBody.token).toMatch(/^[0-9a-f]{64}$/);
     expect(tokenBody.displayUrl).toContain("/display/");
 
+    // Open display without login cookies
     const anon = await browser.newContext();
     const displayPage = await anon.newPage();
     await displayPage.goto(tokenBody.displayUrl);
     await expect(displayPage.getByTestId("display-board")).toBeVisible({
       timeout: 30000,
     });
-    await expect(
-      displayPage.locator("[data-widget-type=clock]").first(),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(displayPage.locator("[data-widget-type=clock]").first()).toBeVisible({
+      timeout: 15000,
+    });
 
+    // Disable token
     const disableRes = await page.request.patch(
       `/api/dashboards/${dashId}/display-tokens/${tokenBody.id}`,
       { data: { isActive: false } },
@@ -71,6 +71,7 @@ test.describe("Display renderer", () => {
     });
     await expect(displayPage.getByText("已被禁用")).toBeVisible();
 
+    // Invalid token
     await displayPage.goto("/display/notavalidtokenatall000");
     await expect(displayPage.getByTestId("display-error")).toBeVisible({
       timeout: 15000,

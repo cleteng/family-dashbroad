@@ -8,10 +8,7 @@ import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import React from "react";
 import { renderToString } from "react-dom/server";
 import * as schema from "@/db/schema";
-import {
-  generateDisplayToken,
-  hashDisplayToken,
-} from "@/lib/display-tokens";
+import { generateDisplayToken, hashDisplayToken } from "@/lib/display-tokens";
 import { DisplayBoard } from "@/components/display/DisplayBoard";
 
 function createTestDb() {
@@ -36,11 +33,7 @@ function seedUser(sqlite: Database.Database, email: string): string {
   return id;
 }
 
-function seedDashboard(
-  sqlite: Database.Database,
-  userId: string,
-  name: string,
-): string {
+function seedDashboard(sqlite: Database.Database, userId: string, name: string): string {
   const id = crypto.randomUUID();
   const now = Date.now();
   sqlite
@@ -103,9 +96,7 @@ describe("regenerate hash swap (isolated test db)", () => {
     expect(newHash).not.toBe(oldHash);
 
     ctx.sqlite
-      .prepare(
-        "UPDATE display_tokens SET token_hash = ?, updated_at = ? WHERE id = ?",
-      )
+      .prepare("UPDATE display_tokens SET token_hash = ?, updated_at = ? WHERE id = ?")
       .run(newHash, Date.now(), tokenId);
 
     const row = ctx.sqlite
@@ -124,14 +115,7 @@ describe("regenerate hash swap (isolated test db)", () => {
     expect(listRow).not.toHaveProperty("token");
     expect(listRow).not.toHaveProperty("token_hash");
     expect(Object.keys(listRow).sort()).toEqual(
-      [
-        "created_at",
-        "id",
-        "is_active",
-        "last_used_at",
-        "name",
-        "updated_at",
-      ].sort(),
+      ["created_at", "id", "is_active", "last_used_at", "name", "updated_at"].sort(),
     );
   });
 });

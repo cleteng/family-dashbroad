@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  getWidgetDefinition,
-  registerWidget,
-} from "@/widgets/registry";
+import { getWidgetDefinition, registerWidget } from "@/widgets/registry";
 import { clockDefinition } from "@/widgets/clock/definition";
 import type { Breakpoint } from "@/lib/layouts";
 import type { DisplayLayoutEntry, DisplayWidget } from "@/lib/display-tokens";
@@ -54,6 +51,8 @@ export function DisplayBoard({
     );
   }
 
+  // CSS grid 12 cols; place items by x/y/w/h (1-based grid-column/row)
+  // Use absolute positioning within a relative grid sized by max y+h
   const maxBottom = widgets.reduce((m, w) => {
     const e = layoutMap.get(w.id);
     if (!e) return m;

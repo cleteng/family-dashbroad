@@ -17,7 +17,5 @@ export default async function DashboardEditorPage({ params }: PageProps) {
     notFound();
   }
 
-  return (
-    <DashboardEditor dashboardId={dashboard.id} initialName={dashboard.name} />
-  );
+  return <DashboardEditor dashboardId={dashboard.id} initialName={dashboard.name} />;
 }

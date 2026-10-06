@@ -1,10 +1,4 @@
-export function DisplayError({
-  title,
-  message,
-}: {
-  title: string;
-  message: string;
-}) {
+export function DisplayError({ title, message }: { title: string; message: string }) {
   return (
     <main
       className="flex min-h-screen flex-col items-center justify-center bg-black px-6 text-center text-white"

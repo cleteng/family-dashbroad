@@ -39,9 +39,7 @@ export function DashboardList() {
     let cancelled = false;
     (async () => {
       try {
-        const data = await apiGet<{ dashboards: Dashboard[] }>(
-          "/api/dashboards",
-        );
+        const data = await apiGet<{ dashboards: Dashboard[] }>("/api/dashboards");
         if (cancelled) return;
         setError(null);
         setDashboards(data.dashboards);

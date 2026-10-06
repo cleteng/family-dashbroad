@@ -106,11 +106,9 @@ export function TokenManageModal({
 
   async function onToggle(t: TokenItem) {
     try {
-      await apiSend(
-        `/api/dashboards/${dashboardId}/display-tokens/${t.id}`,
-        "PATCH",
-        { isActive: !t.isActive },
-      );
+      await apiSend(`/api/dashboards/${dashboardId}/display-tokens/${t.id}`, "PATCH", {
+        isActive: !t.isActive,
+      });
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "操作失败");
@@ -142,10 +140,7 @@ export function TokenManageModal({
   async function onDelete(t: TokenItem) {
     if (!window.confirm(`删除展示链接「${t.name || t.id}」？`)) return;
     try {
-      await apiSend(
-        `/api/dashboards/${dashboardId}/display-tokens/${t.id}`,
-        "DELETE",
-      );
+      await apiSend(`/api/dashboards/${dashboardId}/display-tokens/${t.id}`, "DELETE");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "删除失败");
@@ -199,9 +194,7 @@ export function TokenManageModal({
             className="mb-4 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm"
             data-testid="token-reveal"
           >
-            <p className="mb-1 font-medium text-emerald-900">
-              完整 URL（仅显示一次，请复制保存）
-            </p>
+            <p className="mb-1 font-medium text-emerald-900">完整 URL（仅显示一次，请复制保存）</p>
             <input
               type="text"
               readOnly
@@ -218,9 +211,7 @@ export function TokenManageModal({
             >
               复制
             </button>
-            {copyHint ? (
-              <span className="ml-2 text-xs text-emerald-700">{copyHint}</span>
-            ) : null}
+            {copyHint ? <span className="ml-2 text-xs text-emerald-700">{copyHint}</span> : null}
           </div>
         ) : null}
 
@@ -237,26 +228,17 @@ export function TokenManageModal({
         ) : (
           <ul className="divide-y divide-zinc-100">
             {tokens.map((t) => (
-              <li
-                key={t.id}
-                className="py-3 text-sm"
-                data-testid={`token-row-${t.id}`}
-              >
+              <li key={t.id} className="py-3 text-sm" data-testid={`token-row-${t.id}`}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <div className="font-medium">
                       {t.name || "展示链接"}{" "}
-                      <span
-                        className={
-                          t.isActive ? "text-emerald-600" : "text-zinc-400"
-                        }
-                      >
+                      <span className={t.isActive ? "text-emerald-600" : "text-zinc-400"}>
                         {t.isActive ? "启用中" : "已禁用"}
                       </span>
                     </div>
                     <div className="text-xs text-zinc-500">
-                      创建 {formatTime(t.createdAt)} · 最近使用{" "}
-                      {formatTime(t.lastUsedAt)}
+                      创建 {formatTime(t.createdAt)} · 最近使用 {formatTime(t.lastUsedAt)}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1">

@@ -102,11 +102,7 @@ export function loadDisplayPayload(dashboardId: string): DisplayPayload | null {
     .get();
   if (!dash) return null;
 
-  const widgetRows = db
-    .select()
-    .from(widgets)
-    .where(eq(widgets.dashboardId, dashboardId))
-    .all();
+  const widgetRows = db.select().from(widgets).where(eq(widgets.dashboardId, dashboardId)).all();
 
   const widgetIds = widgetRows.map((w) => w.id);
   let layouts: DisplayLayoutEntry[] = [];
@@ -169,10 +165,7 @@ export function createDisplayTokenForDashboard(
   };
 }
 
-export function setDisplayTokenActive(
-  tokenId: string,
-  isActive: boolean,
-): boolean {
+export function setDisplayTokenActive(tokenId: string, isActive: boolean): boolean {
   const existing = db
     .select({ id: displayTokens.id })
     .from(displayTokens)
@@ -185,7 +178,6 @@ export function setDisplayTokenActive(
     .run();
   return true;
 }
-
 
 export type DisplayTokenListItem = {
   id: string;
@@ -225,12 +217,7 @@ export function regenerateDisplayToken(
   const row = db
     .select({ id: displayTokens.id, tokenHash: displayTokens.tokenHash })
     .from(displayTokens)
-    .where(
-      and(
-        eq(displayTokens.id, tokenId),
-        eq(displayTokens.dashboardId, dashboardId),
-      ),
-    )
+    .where(and(eq(displayTokens.id, tokenId), eq(displayTokens.dashboardId, dashboardId)))
     .get();
   if (!row) return null;
 
@@ -255,19 +242,11 @@ export function regenerateDisplayToken(
   return { token, displayUrl: `/display/${token}` };
 }
 
-export function deleteDisplayToken(
-  dashboardId: string,
-  tokenId: string,
-): boolean {
+export function deleteDisplayToken(dashboardId: string, tokenId: string): boolean {
   const row = db
     .select({ id: displayTokens.id })
     .from(displayTokens)
-    .where(
-      and(
-        eq(displayTokens.id, tokenId),
-        eq(displayTokens.dashboardId, dashboardId),
-      ),
-    )
+    .where(and(eq(displayTokens.id, tokenId), eq(displayTokens.dashboardId, dashboardId)))
     .get();
   if (!row) return false;
   db.delete(displayTokens).where(eq(displayTokens.id, tokenId)).run();
