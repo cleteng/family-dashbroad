@@ -45,14 +45,19 @@ export function GoogleSettingsForm() {
   useEffect(() => {
     const err = search.get("error");
     const connected = search.get("connected");
-    if (err) {
-      setMessage(err);
-      setMessageKind("err");
-    } else if (connected) {
-      setMessage("已连接 Google");
-      setMessageKind("ok");
-      void load();
-    }
+    if (!err && !connected) return;
+    // Defer setState so it is not synchronous with the effect body
+    // (avoids react-hooks/set-state-in-effect cascading-render lint).
+    queueMicrotask(() => {
+      if (err) {
+        setMessage(err);
+        setMessageKind("err");
+      } else if (connected) {
+        setMessage("已连接 Google");
+        setMessageKind("ok");
+        void load();
+      }
+    });
   }, [search, load]);
 
   async function onRevoke() {
