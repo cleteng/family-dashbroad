@@ -28,14 +28,23 @@ export default async function AdminPage() {
           <h1 className="text-2xl font-semibold">看板管理</h1>
           <p className="mt-1 text-sm text-zinc-600">已登录：{user.email}</p>
         </div>
-        <form action={logoutAction}>
-          <button
-            type="submit"
+        <div className="flex items-center gap-2">
+          <a
+            href="/admin/settings/home-assistant"
             className="rounded border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50"
+            data-testid="nav-ha-settings"
           >
-            登出
-          </button>
-        </form>
+            Home Assistant
+          </a>
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              className="rounded border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50"
+            >
+              登出
+            </button>
+          </form>
+        </div>
       </div>
       <DashboardList />
     </main>
