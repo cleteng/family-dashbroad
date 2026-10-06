@@ -68,17 +68,22 @@ export function normalizePostalCode(postalCode: string): string {
 }
 
 /** WMO weather interpretation codes → condition + icon name for TASK-015. */
-export function mapWeatherCode(code: number): { condition: string; icon: string } {
+export function mapWeatherCode(code: number): {
+  condition: string;
+  icon: string;
+} {
   // https://open-meteo.com/en/docs — WMO Weather interpretation codes (WW)
   if (code === 0) return { condition: "Clear", icon: "clear" };
   if (code === 1) return { condition: "Mainly Clear", icon: "mainly-clear" };
   if (code === 2) return { condition: "Partly Cloudy", icon: "partly-cloudy" };
   if (code === 3) return { condition: "Cloudy", icon: "cloudy" };
   if (code === 45 || code === 48) return { condition: "Fog", icon: "fog" };
-  if (code >= 51 && code <= 57) return { condition: "Drizzle", icon: "drizzle" };
+  if (code >= 51 && code <= 57)
+    return { condition: "Drizzle", icon: "drizzle" };
   if (code >= 61 && code <= 67) return { condition: "Rain", icon: "rain" };
   if (code >= 71 && code <= 77) return { condition: "Snow", icon: "snow" };
-  if (code >= 80 && code <= 82) return { condition: "Rain Showers", icon: "showers" };
+  if (code >= 80 && code <= 82)
+    return { condition: "Rain Showers", icon: "showers" };
   if (code === 85 || code === 86)
     return { condition: "Snow Showers", icon: "snow-showers" };
   if (code >= 95 && code <= 99)
@@ -146,7 +151,11 @@ export async function resolveLocation(
   const isDefault = normalized === normalizePostalCode(DEFAULT_POSTAL_CODE);
 
   // Try full postal, then with country qualifier, then first 3 chars (FSA)
-  const queries = [`${raw}, Canada`, normalized, `${normalized.slice(0, 3)}, Canada`];
+  const queries = [
+    `${raw}, Canada`,
+    normalized,
+    `${normalized.slice(0, 3)}, Canada`,
+  ];
 
   for (const q of queries) {
     const url = `${GEOCODE_URL}?name=${encodeURIComponent(q)}&count=5&language=en&format=json&countryCode=CA`;
@@ -161,7 +170,11 @@ export async function resolveLocation(
     }
 
     const hit = body.results?.[0];
-    if (hit && typeof hit.latitude === "number" && typeof hit.longitude === "number") {
+    if (
+      hit &&
+      typeof hit.latitude === "number" &&
+      typeof hit.longitude === "number"
+    ) {
       const nameParts = [hit.name, hit.admin1].filter(Boolean);
       return {
         lat: hit.latitude,
@@ -195,7 +208,10 @@ interface ForecastApiResponse {
   };
 }
 
-function parseForecast(body: ForecastApiResponse, stale: boolean): WeatherResult | null {
+function parseForecast(
+  body: ForecastApiResponse,
+  stale: boolean,
+): WeatherResult | null {
   const cur = body.current;
   const daily = body.daily;
   if (!cur || !daily?.time?.length) return null;
@@ -257,7 +273,9 @@ export async function getWeather(
       "weather_code",
       "wind_speed_10m",
     ].join(","),
-    daily: ["weather_code", "temperature_2m_max", "temperature_2m_min"].join(","),
+    daily: ["weather_code", "temperature_2m_max", "temperature_2m_min"].join(
+      ",",
+    ),
     timezone: "auto",
     forecast_days: "7",
     wind_speed_unit: "kmh",
