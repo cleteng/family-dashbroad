@@ -200,3 +200,175 @@ export function getHACredentialsForServer(): {
   if (!stored.url || !stored.token) return null;
   return { url: stored.url, token: stored.token };
 }
+
+// ─── Entity state helpers (TASK-017) ─────────────────────────────────────────
+
+export type HAEntityState = {
+  entityId: string;
+  state: string;
+  unit: string | null;
+  friendlyName: string;
+  lastUpdated: string | null;
+};
+
+export type HAEntityListItem = {
+  entityId: string;
+  friendlyName: string;
+  domain: string;
+};
+
+export type HAFetchResult<T> =
+  | { ok: true; data: T }
+  | {
+      ok: false;
+      reason: "not_configured" | "unauthorized" | "not_found" | "error";
+    };
+
+async function haFetch(
+  path: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<{ status: number; json: unknown } | { status: 0; json: null }> {
+  const creds = getHACredentialsForServer();
+  if (!creds) return { status: 0, json: null };
+
+  const base = normalizeHAUrl(creds.url);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetchImpl(`${base}${path}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${creds.token}`,
+        "Content-Type": "application/json",
+      },
+      signal: controller.signal,
+    });
+    let json: unknown = null;
+    try {
+      json = await res.json();
+    } catch {
+      json = null;
+    }
+    return { status: res.status, json };
+  } catch {
+    return { status: 0, json: null };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function mapStateBody(body: Record<string, unknown>): HAEntityState | null {
+  if (typeof body.entity_id !== "string" || typeof body.state !== "string") {
+    return null;
+  }
+  const attrs =
+    body.attributes && typeof body.attributes === "object"
+      ? (body.attributes as Record<string, unknown>)
+      : {};
+  const unit =
+    typeof attrs.unit_of_measurement === "string"
+      ? attrs.unit_of_measurement
+      : null;
+  const friendlyName =
+    typeof attrs.friendly_name === "string" && attrs.friendly_name
+      ? attrs.friendly_name
+      : body.entity_id;
+  const lastUpdated =
+    typeof body.last_updated === "string"
+      ? body.last_updated
+      : typeof body.last_changed === "string"
+        ? body.last_changed
+        : null;
+  return {
+    entityId: body.entity_id,
+    state: body.state,
+    unit,
+    friendlyName,
+    lastUpdated,
+  };
+}
+
+/**
+ * GET /api/states/{entity_id} via saved credentials.
+ * Token never leaves this module.
+ */
+export async function fetchHAEntityState(
+  entityId: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<HAFetchResult<HAEntityState>> {
+  const id = entityId.trim();
+  if (!id) return { ok: false, reason: "not_found" };
+  if (!getHACredentialsForServer())
+    return { ok: false, reason: "not_configured" };
+
+  const encoded = encodeURIComponent(id);
+  const res = await haFetch(`/api/states/${encoded}`, fetchImpl);
+  if (res.status === 0) {
+    // no creds already handled; network/abort
+    return getHACredentialsForServer()
+      ? { ok: false, reason: "error" }
+      : { ok: false, reason: "not_configured" };
+  }
+  if (res.status === 401 || res.status === 403) {
+    return { ok: false, reason: "unauthorized" };
+  }
+  if (res.status === 404) {
+    return { ok: false, reason: "not_found" };
+  }
+  if (
+    res.status < 200 ||
+    res.status >= 300 ||
+    !res.json ||
+    typeof res.json !== "object"
+  ) {
+    return { ok: false, reason: "error" };
+  }
+  const mapped = mapStateBody(res.json as Record<string, unknown>);
+  if (!mapped) return { ok: false, reason: "error" };
+  return { ok: true, data: mapped };
+}
+
+const SENSOR_DOMAINS = new Set(["sensor", "binary_sensor"]);
+
+/**
+ * List sensor / binary_sensor entities from HA GET /api/states.
+ */
+export async function listHASensorEntities(
+  fetchImpl: FetchLike = fetch,
+): Promise<HAFetchResult<HAEntityListItem[]>> {
+  if (!getHACredentialsForServer())
+    return { ok: false, reason: "not_configured" };
+
+  const res = await haFetch("/api/states", fetchImpl);
+  if (res.status === 0) {
+    return getHACredentialsForServer()
+      ? { ok: false, reason: "error" }
+      : { ok: false, reason: "not_configured" };
+  }
+  if (res.status === 401 || res.status === 403) {
+    return { ok: false, reason: "unauthorized" };
+  }
+  if (res.status < 200 || res.status >= 300 || !Array.isArray(res.json)) {
+    return { ok: false, reason: "error" };
+  }
+
+  const items: HAEntityListItem[] = [];
+  for (const row of res.json) {
+    if (!row || typeof row !== "object") continue;
+    const rec = row as Record<string, unknown>;
+    if (typeof rec.entity_id !== "string") continue;
+    const domain = rec.entity_id.split(".")[0] ?? "";
+    if (!SENSOR_DOMAINS.has(domain)) continue;
+    const attrs =
+      rec.attributes && typeof rec.attributes === "object"
+        ? (rec.attributes as Record<string, unknown>)
+        : {};
+    const friendlyName =
+      typeof attrs.friendly_name === "string" && attrs.friendly_name
+        ? attrs.friendly_name
+        : rec.entity_id;
+    items.push({ entityId: rec.entity_id, friendlyName, domain });
+  }
+  items.sort((a, b) => a.friendlyName.localeCompare(b.friendlyName, "zh"));
+  return { ok: true, data: items };
+}
