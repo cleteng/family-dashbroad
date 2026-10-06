@@ -11,11 +11,13 @@ import { clockDefinition } from "./clock/definition";
 import { calendarDefinition } from "./calendar/definition";
 import { chineseAlmanacDefinition } from "./chinese-almanac/definition";
 import { weatherDefinition } from "./weather/definition";
+import { haSensorDefinition } from "./ha-sensor/definition";
 
 registerWidget(clockDefinition);
 registerWidget(calendarDefinition);
 registerWidget(chineseAlmanacDefinition);
 registerWidget(weatherDefinition);
+registerWidget(haSensorDefinition);
 
 export {
   registerWidget,
@@ -29,6 +31,7 @@ export { clockDefinition } from "./clock/definition";
 export { calendarDefinition } from "./calendar/definition";
 export { chineseAlmanacDefinition } from "./chinese-almanac/definition";
 export { weatherDefinition } from "./weather/definition";
+export { haSensorDefinition } from "./ha-sensor/definition";
 export {
   REGISTERED_WIDGET_TYPES,
   listWidgetConfigEntries,
