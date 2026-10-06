@@ -3,7 +3,10 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { displayTokens } from "@/db/schema/display-tokens";
 import { getOwnedDashboard } from "@/lib/dashboards";
-import { setDisplayTokenActive } from "@/lib/display-tokens";
+import {
+  deleteDisplayToken,
+  setDisplayTokenActive,
+} from "@/lib/display-tokens";
 import { requireAuth } from "@/lib/require-auth";
 import { z } from "zod";
 
@@ -15,9 +18,6 @@ const patchSchema = z.object({
   isActive: z.boolean(),
 });
 
-/**
- * PATCH — enable/disable a display token (minimal, for tests / future TASK-010).
- */
 export async function PATCH(request: NextRequest, context: RouteContext) {
   const auth = await requireAuth();
   if ("error" in auth) return auth.error;
@@ -59,4 +59,21 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   setDisplayTokenActive(tokenId, parsed.data.isActive);
   return NextResponse.json({ ok: true, isActive: parsed.data.isActive });
+}
+
+export async function DELETE(_request: NextRequest, context: RouteContext) {
+  const auth = await requireAuth();
+  if ("error" in auth) return auth.error;
+
+  const { id, tokenId } = await context.params;
+  const dashboard = getOwnedDashboard(auth.session.userId, id);
+  if (!dashboard) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const ok = deleteDisplayToken(dashboard.id, tokenId);
+  if (!ok) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  return NextResponse.json({ ok: true });
 }
