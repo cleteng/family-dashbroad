@@ -2,8 +2,8 @@
 
 Open-source, self-hosted family information center.
 
-**Current status: TASK-009 complete** (Display renderer).  
-Next: **TASK-010** — Display token management UI.
+**Current status: TASK-010 complete** (Display token management).  
+Next: further product tasks as planned.
 
 ## Local Development
 
@@ -14,24 +14,33 @@ npm run db:migrate
 npm run dev
 ```
 
+## 展示链接管理 (TASK-010)
+
+在 `/admin` 看板列表点 **展示链接**：
+
+1. **新建链接** — 可选名称；创建后完整 URL **只显示一次**，请立即复制
+2. **禁用 / 启用** — 禁用后 `/display/<token>` 显示「已被禁用」
+3. **重新生成** — 旧链接立即失效，新 URL 只显示一次
+4. **删除** — 二次确认后删除记录
+
+| 方法 | 路径 |
+|------|------|
+| `GET` | `/api/dashboards/[id]/display-tokens` （无明文） |
+| `POST` | `/api/dashboards/[id]/display-tokens` |
+| `PATCH` | `/api/dashboards/[id]/display-tokens/[tokenId]` |
+| `POST` | `.../[tokenId]/regenerate` |
+| `DELETE` | `/api/dashboards/[id]/display-tokens/[tokenId]` |
+
 ## Display (TASK-009)
 
-- Public URL: `/display/<token>` — **no login** required
-- Invalid token → "链接无效或已失效"; disabled → "该展示链接已被禁用"
-- Create token (admin session): `POST /api/dashboards/[id]/display-tokens` body `{ name? }`
-  → `{ token, displayUrl, id }` (plain token returned **once**; DB stores SHA-256 only)
-- Disable (minimal): `PATCH /api/dashboards/[id]/display-tokens/[tokenId]` `{ isActive: false }`
+Public `/display/<token>` — no login. Token stored as SHA-256 only.
 
 ## Admin UI (TASK-008)
 
-Login `/login` → `/admin` list → `/admin/dashboards/[id]` editor.
+`/admin` list + `/admin/dashboards/[id]` editor.
 
 ## Quality Gates
 
 ```bash
 npm run lint && npx prettier --check . && npm run test && npm run test:e2e && npm run build
 ```
-
-## Next Steps
-
-- **TASK-010**: Display token management UI
