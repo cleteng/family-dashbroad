@@ -2,8 +2,8 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-017 complete** (HA sensor widget).  
-Next: further HA widgets (TASK-018).
+**Current status: TASK-018 complete** (HA environment presets).  
+Next: further product tasks as planned.
 
 ## Tech Stack
 
