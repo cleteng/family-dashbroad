@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/lib/api-client";
+import { TokenManageModal } from "@/components/admin/TokenManageModal";
 
 type Dashboard = {
   id: string;
@@ -17,6 +18,10 @@ export function DashboardList() {
   const [error, setError] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [tokenDash, setTokenDash] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -151,6 +156,14 @@ export function DashboardList() {
                 </Link>
                 <button
                   type="button"
+                  onClick={() => setTokenDash({ id: d.id, name: d.name })}
+                  className="rounded border border-zinc-300 px-2 py-1 hover:bg-zinc-50"
+                  data-testid={`token-manage-${d.id}`}
+                >
+                  展示链接
+                </button>
+                <button
+                  type="button"
                   onClick={() => void onRename(d.id, d.name)}
                   className="rounded border border-zinc-300 px-2 py-1 hover:bg-zinc-50"
                 >
@@ -168,6 +181,13 @@ export function DashboardList() {
           ))}
         </ul>
       )}
+      {tokenDash ? (
+        <TokenManageModal
+          dashboardId={tokenDash.id}
+          dashboardName={tokenDash.name}
+          onClose={() => setTokenDash(null)}
+        />
+      ) : null}
     </div>
   );
 }
