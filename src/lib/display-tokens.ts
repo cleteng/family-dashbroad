@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { displayTokens } from "@/db/schema/display-tokens";
@@ -85,11 +85,7 @@ function parseConfig(raw: string | null): Record<string, unknown> | null {
   if (raw === null || raw === undefined) return null;
   try {
     const parsed = JSON.parse(raw) as unknown;
-    if (
-      parsed !== null &&
-      typeof parsed === "object" &&
-      !Array.isArray(parsed)
-    ) {
+    if (parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)) {
       return parsed as Record<string, unknown>;
     }
     return null;
@@ -187,5 +183,85 @@ export function setDisplayTokenActive(
     .set({ isActive, updatedAt: new Date() })
     .where(eq(displayTokens.id, tokenId))
     .run();
+  return true;
+}
+
+
+export type DisplayTokenListItem = {
+  id: string;
+  name: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  lastUsedAt: Date | null;
+  updatedAt: Date;
+};
+
+/** List tokens for a dashboard. Never includes plaintext token or hash. */
+export function listDisplayTokens(dashboardId: string): DisplayTokenListItem[] {
+  const rows = db
+    .select({
+      id: displayTokens.id,
+      name: displayTokens.name,
+      isActive: displayTokens.isActive,
+      createdAt: displayTokens.createdAt,
+      lastUsedAt: displayTokens.lastUsedAt,
+      updatedAt: displayTokens.updatedAt,
+    })
+    .from(displayTokens)
+    .where(eq(displayTokens.dashboardId, dashboardId))
+    .orderBy(desc(displayTokens.createdAt))
+    .all();
+  return rows;
+}
+
+/**
+ * Regenerate token: new plaintext + hash on same row. Old plaintext stops working.
+ * Returns new plaintext once.
+ */
+export function regenerateDisplayToken(
+  dashboardId: string,
+  tokenId: string,
+): { token: string; displayUrl: string } | null {
+  const row = db
+    .select({ id: displayTokens.id })
+    .from(displayTokens)
+    .where(
+      and(
+        eq(displayTokens.id, tokenId),
+        eq(displayTokens.dashboardId, dashboardId),
+      ),
+    )
+    .get();
+  if (!row) return null;
+
+  const token = generateDisplayToken();
+  const tokenHash = hashDisplayToken(token);
+  db.update(displayTokens)
+    .set({
+      tokenHash,
+      updatedAt: new Date(),
+    })
+    .where(eq(displayTokens.id, tokenId))
+    .run();
+
+  return { token, displayUrl: `/display/${token}` };
+}
+
+export function deleteDisplayToken(
+  dashboardId: string,
+  tokenId: string,
+): boolean {
+  const row = db
+    .select({ id: displayTokens.id })
+    .from(displayTokens)
+    .where(
+      and(
+        eq(displayTokens.id, tokenId),
+        eq(displayTokens.dashboardId, dashboardId),
+      ),
+    )
+    .get();
+  if (!row) return false;
+  db.delete(displayTokens).where(eq(displayTokens.id, tokenId)).run();
   return true;
 }
