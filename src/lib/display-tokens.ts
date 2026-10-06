@@ -223,7 +223,7 @@ export function regenerateDisplayToken(
   tokenId: string,
 ): { token: string; displayUrl: string } | null {
   const row = db
-    .select({ id: displayTokens.id })
+    .select({ id: displayTokens.id, tokenHash: displayTokens.tokenHash })
     .from(displayTokens)
     .where(
       and(
@@ -234,8 +234,16 @@ export function regenerateDisplayToken(
     .get();
   if (!row) return null;
 
-  const token = generateDisplayToken();
-  const tokenHash = hashDisplayToken(token);
+  // Keep generating until hash differs from previous (extremely rare collision loop)
+  let token = generateDisplayToken();
+  let tokenHash = hashDisplayToken(token);
+  let guard = 0;
+  while (tokenHash === row.tokenHash && guard < 5) {
+    token = generateDisplayToken();
+    tokenHash = hashDisplayToken(token);
+    guard += 1;
+  }
+
   db.update(displayTokens)
     .set({
       tokenHash,
