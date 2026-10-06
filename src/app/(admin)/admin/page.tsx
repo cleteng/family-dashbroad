@@ -36,6 +36,13 @@ export default async function AdminPage() {
           >
             Home Assistant
           </a>
+          <a
+            href="/admin/settings/google"
+            className="rounded border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50"
+            data-testid="nav-google-settings"
+          >
+            Google
+          </a>
           <form action={logoutAction}>
             <button
               type="submit"
