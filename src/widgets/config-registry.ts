@@ -28,6 +28,12 @@ import {
   weatherDefaultConfig,
   weatherMetadata,
 } from "./weather/config";
+import {
+  HA_SENSOR_TYPE,
+  haSensorConfigSchema,
+  haSensorDefaultConfig,
+  haSensorMetadata,
+} from "./ha-sensor/config";
 import type { z } from "zod";
 
 export type WidgetConfigEntry = {
@@ -61,6 +67,12 @@ export const widgetConfigRegistry: Record<string, WidgetConfigEntry> = {
     metadata: { ...weatherMetadata },
     defaultConfig: { ...weatherDefaultConfig },
     configSchema: weatherConfigSchema,
+  },
+  [HA_SENSOR_TYPE]: {
+    type: HA_SENSOR_TYPE,
+    metadata: { ...haSensorMetadata },
+    defaultConfig: { ...haSensorDefaultConfig },
+    configSchema: haSensorConfigSchema,
   },
 };
 
