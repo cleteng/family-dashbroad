@@ -1,16 +1,53 @@
-/**
- * Display route — must be accessible WITHOUT admin session.
- * Token validation will be implemented when Display Token feature lands.
- * For TASK-003 we only prove that this path is not blocked by auth middleware.
- */
-export default async function DisplayPage({ params }: { params: Promise<{ token: string }> }) {
+import {
+  loadDisplayPayload,
+  lookupDisplayToken,
+  touchDisplayToken,
+} from "@/lib/display-tokens";
+import { DisplayBoard } from "@/components/display/DisplayBoard";
+import { DisplayError } from "@/components/display/DisplayError";
+
+type PageProps = { params: Promise<{ token: string }> };
+
+export default async function DisplayPage({ params }: PageProps) {
   const { token } = await params;
 
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-black text-white">
-      <h1 className="text-2xl font-semibold">Display</h1>
-      <p className="mt-2 text-sm text-zinc-400">Token: {token.slice(0, 8)}…</p>
-      <p className="mt-4 text-xs text-zinc-500">No admin login required (TASK-003)</p>
-    </main>
-  );
+  if (!token || token.length < 8) {
+    return (
+      <DisplayError
+        title="链接无效或已失效"
+        message="请检查展示链接是否正确。"
+      />
+    );
+  }
+
+  const lookup = lookupDisplayToken(token);
+  if (lookup.status === "not_found") {
+    return (
+      <DisplayError
+        title="链接无效或已失效"
+        message="请检查展示链接是否正确。"
+      />
+    );
+  }
+  if (lookup.status === "disabled") {
+    return (
+      <DisplayError
+        title="该展示链接已被禁用"
+        message="请联系管理员重新开启展示。"
+      />
+    );
+  }
+
+  touchDisplayToken(lookup.tokenId);
+  const payload = loadDisplayPayload(lookup.dashboardId);
+  if (!payload) {
+    return (
+      <DisplayError
+        title="链接无效或已失效"
+        message="请检查展示链接是否正确。"
+      />
+    );
+  }
+
+  return <DisplayBoard widgets={payload.widgets} layouts={payload.layouts} />;
 }
