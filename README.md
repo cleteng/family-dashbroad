@@ -2,8 +2,8 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-018 complete** (HA environment presets).  
-Next: further product tasks as planned.
+**Current status: TASK-019 complete** (Google OAuth for Tasks).  
+Next: Google Tasks features (TASK-020/021).
 
 ## Tech Stack
 
