@@ -33,7 +33,11 @@ function seedUser(sqlite: Database.Database, email: string): string {
   return id;
 }
 
-function seedDashboard(sqlite: Database.Database, userId: string, name: string): string {
+function seedDashboard(
+  sqlite: Database.Database,
+  userId: string,
+  name: string,
+): string {
   const id = crypto.randomUUID();
   const now = Date.now();
   sqlite
@@ -96,7 +100,9 @@ describe("regenerate hash swap (isolated test db)", () => {
     expect(newHash).not.toBe(oldHash);
 
     ctx.sqlite
-      .prepare("UPDATE display_tokens SET token_hash = ?, updated_at = ? WHERE id = ?")
+      .prepare(
+        "UPDATE display_tokens SET token_hash = ?, updated_at = ? WHERE id = ?",
+      )
       .run(newHash, Date.now(), tokenId);
 
     const row = ctx.sqlite
@@ -115,7 +121,14 @@ describe("regenerate hash swap (isolated test db)", () => {
     expect(listRow).not.toHaveProperty("token");
     expect(listRow).not.toHaveProperty("token_hash");
     expect(Object.keys(listRow).sort()).toEqual(
-      ["created_at", "id", "is_active", "last_used_at", "name", "updated_at"].sort(),
+      [
+        "created_at",
+        "id",
+        "is_active",
+        "last_used_at",
+        "name",
+        "updated_at",
+      ].sort(),
     );
   });
 });
@@ -127,7 +140,7 @@ describe("DisplayBoard unknown widget", () => {
         widgets: [
           {
             id: "w1",
-            type: "weather",
+            type: "__not_a_real_widget__",
             title: null,
             config: null,
           },
