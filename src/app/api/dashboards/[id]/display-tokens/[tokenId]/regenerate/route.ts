@@ -3,6 +3,8 @@ import { getOwnedDashboard } from "@/lib/dashboards";
 import { regenerateDisplayToken } from "@/lib/display-tokens";
 import { requireAuth } from "@/lib/require-auth";
 
+export const dynamic = "force-dynamic";
+
 type RouteContext = {
   params: Promise<{ id: string; tokenId: string }>;
 };
@@ -25,8 +27,15 @@ export async function POST(_request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json({
-    token: result.token,
-    displayUrl: result.displayUrl,
-  });
+  return NextResponse.json(
+    {
+      token: result.token,
+      displayUrl: result.displayUrl,
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    },
+  );
 }
