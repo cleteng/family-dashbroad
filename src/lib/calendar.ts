@@ -4,6 +4,14 @@
  */
 import { Solar } from "lunar-javascript";
 
+export interface AlmanacTimeSlot {
+  /** 地支：子丑寅… */
+  zhi: string;
+  /** 黄道吉凶 */
+  luck: "吉" | "凶";
+  ganZhi: string;
+}
+
 export interface CalendarDay {
   gregorian: { year: number; month: number; day: number };
   /** 周一~周日 → "一" … "日" */
@@ -21,6 +29,21 @@ export interface CalendarDay {
   solarTerm: string | null;
   chinaHoliday: string | null;
   canadaHoliday: string | null;
+  /** 宜 */
+  yi: string[];
+  /** 忌 */
+  ji: string[];
+  /** 纳音五行，如「大驿土」 */
+  naYin: string;
+  /** 冲煞简述 */
+  chong: string;
+  sha: string;
+  /** 值神 */
+  tianShen: string;
+  /** 十二时辰吉凶（去重地支，保留白天常用 12 个） */
+  times: AlmanacTimeSlot[];
+  /** 四柱八字 年 月 日 时 */
+  eightChar: string;
 }
 
 const WEEKDAY_CN = ["日", "一", "二", "三", "四", "五", "六"] as const;
@@ -196,6 +219,55 @@ export function getCalendarDay(year: number, month: number, day: number): Calend
     monthNameFinal = `${monthNameFinal}月`;
   }
 
+  // 宜忌 / 五行 / 冲煞 / 时辰
+  let yi: string[] = [];
+  let ji: string[] = [];
+  let naYin = "";
+  let chong = "";
+  let sha = "";
+  let tianShen = "";
+  let times: AlmanacTimeSlot[] = [];
+  let eightChar = "";
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const L = lunar as any;
+    yi = Array.isArray(L.getDayYi?.()) ? L.getDayYi().map(String) : [];
+    ji = Array.isArray(L.getDayJi?.()) ? L.getDayJi().map(String) : [];
+    naYin = String(L.getDayNaYin?.() ?? "");
+    chong = String(L.getDayChongDesc?.() ?? L.getDayChong?.() ?? "");
+    sha = String(L.getDaySha?.() ?? "");
+    tianShen = String(L.getDayTianShen?.() ?? "");
+    const rawTimes = L.getTimes?.() ?? [];
+    const seen = new Set<string>();
+    for (const slot of rawTimes) {
+      const zhi = String(slot.getZhi?.() ?? "");
+      if (!zhi || seen.has(zhi)) continue;
+      seen.add(zhi);
+      const luckRaw = String(slot.getTianShenLuck?.() ?? "");
+      const luck: "吉" | "凶" = luckRaw.includes("吉") ? "吉" : "凶";
+      times.push({
+        zhi,
+        luck,
+        ganZhi: String(slot.getGanZhi?.() ?? ""),
+      });
+    }
+    // 最多 12 个地支
+    times = times.slice(0, 12);
+    try {
+      const ec = L.getEightChar?.();
+      if (ec) {
+        eightChar = [ec.getYear(), ec.getMonth(), ec.getDay(), ec.getTime()]
+          .map((x: unknown) => String(x ?? ""))
+          .filter(Boolean)
+          .join(" ");
+      }
+    } catch {
+      /* optional */
+    }
+  } catch {
+    /* almanac extras optional */
+  }
+
   return {
     gregorian: { year, month, day },
     weekday,
@@ -212,6 +284,14 @@ export function getCalendarDay(year: number, month: number, day: number): Calend
     solarTerm,
     chinaHoliday,
     canadaHoliday: canadaHolidayName(year, month, day),
+    yi,
+    ji,
+    naYin,
+    chong,
+    sha,
+    tianShen,
+    times,
+    eightChar,
   };
 }
 

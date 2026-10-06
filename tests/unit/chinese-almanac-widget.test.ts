@@ -29,5 +29,21 @@ describe("AlmanacRenderer", () => {
     expect(html).toContain("星期");
     expect(html).toContain("农历");
     expect(html).not.toContain("福到万家");
+    expect(html).toContain("almanac-yiji");
+    expect(html).toContain("almanac-times");
+    expect(html).toContain("almanac-meta");
   });
 });
+
+describe("getCalendarDay almanac extras", () => {
+  it("returns yi/ji/naYin/times for a known day", async () => {
+    const { getCalendarDay } = await import("@/lib/calendar");
+    const d = getCalendarDay(2026, 10, 2);
+    expect(Array.isArray(d.yi)).toBe(true);
+    expect(Array.isArray(d.ji)).toBe(true);
+    expect(d.naYin.length).toBeGreaterThan(0);
+    expect(d.times.length).toBeGreaterThan(0);
+    expect(["吉", "凶"]).toContain(d.times[0].luck);
+  });
+});
+

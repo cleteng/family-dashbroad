@@ -2,7 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { getCalendarDay } from "@/lib/calendar";
-import { almanacDateColorClass, mergeChineseAlmanacConfig } from "./config";
+import {
+  almanacDateColorClass,
+  mergeChineseAlmanacConfig,
+} from "./config";
 
 const WEEKDAY_EN: Record<string, string> = {
   日: "Sunday",
@@ -51,7 +54,11 @@ function dayOfYear(y: number, m: number, d: number): number {
   return Math.floor((now.getTime() - start.getTime()) / 86400000);
 }
 
-export function AlmanacRenderer({ config }: { config: Record<string, unknown> }) {
+export function AlmanacRenderer({
+  config,
+}: {
+  config: Record<string, unknown>;
+}) {
   const cfg = mergeChineseAlmanacConfig(config);
   const today = new Date();
   const [cursor, setCursor] = useState({
@@ -68,10 +75,12 @@ export function AlmanacRenderer({ config }: { config: Record<string, unknown> })
   const dateColor = almanacDateColorClass(info.chinaHoliday);
   const doy = dayOfYear(cursor.year, cursor.month, cursor.day);
   const enWeek = WEEKDAY_EN[info.weekday] ?? "";
+  const yiShow = info.yi.slice(0, 6);
+  const jiShow = info.ji.slice(0, 6);
 
   return (
     <div
-      className="flex h-full min-h-[280px] flex-col overflow-hidden rounded-sm bg-[#faf6ee] text-[#c41e3a] shadow-md"
+      className="flex h-full min-h-[320px] flex-col overflow-auto rounded-sm bg-[#faf6ee] text-[#c41e3a] shadow-md"
       data-testid="chinese-almanac-widget"
       data-widget-type="chinese-almanac"
       style={{
@@ -80,48 +89,42 @@ export function AlmanacRenderer({ config }: { config: Record<string, unknown> })
         backgroundSize: "12px 12px",
       }}
     >
-      {/* 顶部挂历红条 — 无「福到万家」 */}
       <div
-        className="relative flex h-8 shrink-0 items-center justify-center bg-gradient-to-b from-[#e03131] to-[#c41e3a]"
+        className="relative flex h-7 shrink-0 items-center justify-center bg-gradient-to-b from-[#e03131] to-[#c41e3a]"
         aria-hidden
       >
-        <div className="absolute left-3 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full border-2 border-[#d4a017] bg-[#b8860b]" />
-        <div className="absolute right-3 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full border-2 border-[#d4a017] bg-[#b8860b]" />
-        <div className="h-px w-2/3 bg-[#ffd7a8]/opacity-40" />
+        <div className="absolute left-3 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full border border-[#d4a017] bg-[#b8860b]" />
+        <div className="absolute right-3 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full border border-[#d4a017] bg-[#b8860b]" />
       </div>
 
-      {/* 年 / 公历月 / 农历月 */}
-      <div className="mt-2 flex items-center justify-between px-3 text-[13px] font-semibold tracking-wider">
+      <div className="mt-1.5 flex items-center justify-between px-2 text-[12px] font-semibold tracking-wider">
         <span className="tabular-nums">{info.gregorian.year}</span>
         <span className="rounded-full border border-[#c41e3a]/40 px-2 py-0.5">
           {MONTH_CN[info.gregorian.month]}
         </span>
-        <span className="text-[12px]">农历{info.lunar.monthName}</span>
+        <span className="text-[11px]">农历{info.lunar.monthName}</span>
       </div>
 
-      {/* 中部：左元日 / 大号日期 / 右星期与干支 */}
-      <div className="relative mt-1 flex flex-1 items-center px-2">
-        <div className="w-14 shrink-0 text-left text-[10px] leading-tight text-[#c41e3a]/90">
+      <div className="relative mt-0.5 flex items-center px-1">
+        <div className="w-12 shrink-0 text-left text-[9px] leading-tight text-[#c41e3a]/90">
           <div>第 {doy} 天</div>
         </div>
-
         <div className="flex min-w-0 flex-1 flex-col items-center">
           <div
-            className={`text-[72px] font-black leading-none tabular-nums md:text-[88px] ${dateColor}`}
+            className={`text-[64px] font-black leading-none tabular-nums md:text-[76px] ${dateColor}`}
             data-testid="almanac-day-number"
             style={{ fontFamily: "Georgia, 'Noto Serif SC', serif" }}
           >
             {info.gregorian.day}
           </div>
         </div>
-
         <div
-          className="w-16 shrink-0 text-right text-[11px] leading-snug"
+          className="w-14 shrink-0 text-right text-[10px] leading-snug"
           data-testid="almanac-weekday"
         >
           <div className="font-semibold">星期{info.weekday}</div>
-          <div className="text-[10px] text-[#c41e3a]/80">{enWeek}</div>
-          <div className="mt-1 text-[10px]" data-testid="almanac-lunar">
+          <div className="text-[9px] text-[#c41e3a]/80">{enWeek}</div>
+          <div className="mt-0.5 text-[9px]" data-testid="almanac-lunar">
             {info.lunar.ganzhi}年
             <br />
             {info.lunar.zodiac}年
@@ -129,21 +132,18 @@ export function AlmanacRenderer({ config }: { config: Record<string, unknown> })
         </div>
       </div>
 
-      {/* 农历日行 */}
-      <div className="text-center text-sm font-medium text-[#8b1a1a]">
+      <div className="text-center text-xs font-medium text-[#8b1a1a]">
         {info.lunar.monthName}
         {info.lunar.dayName}
       </div>
 
-      {/* 节气 / 节假日 — 仿参考图绿色山水条风格 */}
       {info.chinaHoliday || info.solarTerm ? (
         <div
-          className="mx-3 mt-2 flex items-center justify-center gap-2 border-y border-[#2d6a4f]/30 py-1.5"
+          className="mx-2 mt-1 flex items-center justify-center gap-1 border-y border-[#2d6a4f]/30 py-1"
           data-testid="almanac-banner"
         >
-          <span className="text-[10px] text-[#2d6a4f]">〰</span>
           <span
-            className={`rounded-full border px-3 py-0.5 text-sm font-bold ${
+            className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${
               info.chinaHoliday
                 ? "border-[#c41e3a] bg-[#c41e3a] text-white"
                 : "border-[#2d6a4f] text-[#2d6a4f]"
@@ -151,34 +151,115 @@ export function AlmanacRenderer({ config }: { config: Record<string, unknown> })
           >
             {info.chinaHoliday ?? info.solarTerm}
           </span>
-          <span className="text-[10px] text-[#2d6a4f]">〰</span>
         </div>
-      ) : (
-        <div className="mx-3 mt-2 border-t border-[#c41e3a]/20" />
-      )}
+      ) : null}
+
+      {/* 宜 / 吉时 / 忌 */}
+      <div
+        className="mx-2 mt-1.5 grid grid-cols-[1fr_1.2fr_1fr] gap-1 text-[10px]"
+        data-testid="almanac-yiji"
+      >
+        <div className="rounded border border-[#c41e3a]/50 p-1">
+          <div className="mb-0.5 text-center text-[11px] font-bold">宜</div>
+          <div className="grid grid-cols-2 gap-x-0.5 text-center text-[#2d6a4f]">
+            {yiShow.length === 0 ? (
+              <span className="col-span-2 text-[#c41e3a]/50">—</span>
+            ) : (
+              yiShow.map((x) => <span key={x}>{x}</span>)
+            )}
+          </div>
+        </div>
+
+        <div className="rounded border border-[#c41e3a]/40 p-1">
+          <div className="mb-0.5 text-center text-[11px] font-bold text-[#2d6a4f]">
+            今日吉时
+          </div>
+          <div
+            className="grid grid-cols-4 gap-0.5 text-center"
+            data-testid="almanac-times"
+          >
+            {info.times.map((t) => (
+              <div key={t.zhi} className="leading-tight">
+                <div className="text-[#2d6a4f]">{t.zhi}</div>
+                <div
+                  className={
+                    t.luck === "吉" ? "text-[#c41e3a]" : "text-zinc-400"
+                  }
+                >
+                  {t.luck === "吉" ? "●" : "○"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded border border-[#c41e3a]/50 p-1">
+          <div className="mb-0.5 text-center text-[11px] font-bold">忌</div>
+          <div className="grid grid-cols-2 gap-x-0.5 text-center text-[#c41e3a]">
+            {jiShow.length === 0 ? (
+              <span className="col-span-2 text-[#c41e3a]/50">—</span>
+            ) : (
+              jiShow.map((x) => <span key={x}>{x}</span>)
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 五行 / 冲煞 / 值神 / 八字 */}
+      <div
+        className="mx-2 mt-1 mb-1 grid grid-cols-2 gap-1 border border-[#c41e3a]/30 p-1 text-[9px] leading-snug"
+        data-testid="almanac-meta"
+      >
+        <div>
+          <span className="font-semibold">五行</span>{" "}
+          <span className="text-[#2d6a4f]">{info.naYin || "—"}</span>
+        </div>
+        <div>
+          <span className="font-semibold">值神</span> {info.tianShen || "—"}
+        </div>
+        <div>
+          <span className="font-semibold">冲</span> {info.chong || "—"}
+        </div>
+        <div>
+          <span className="font-semibold">煞</span> {info.sha || "—"}
+        </div>
+        {info.eightChar ? (
+          <div className="col-span-2 border-t border-[#c41e3a]/20 pt-0.5">
+            <span className="font-semibold">今日八字</span> {info.eightChar}
+          </div>
+        ) : null}
+        {yiShow[0] ? (
+          <div className="col-span-2 text-[#2d6a4f]">
+            <span className="font-semibold text-[#c41e3a]">本日宜</span>{" "}
+            {yiShow.slice(0, 3).join(" ")}
+          </div>
+        ) : null}
+      </div>
 
       {cfg.showNavigation ? (
-        <div className="mt-auto flex justify-center gap-3 border-t border-[#c41e3a]/15 py-2">
+        <div className="mt-auto flex justify-center gap-3 border-t border-[#c41e3a]/15 py-1.5">
           <button
             type="button"
-            className="rounded border border-[#c41e3a]/50 px-3 py-0.5 text-xs text-[#c41e3a] hover:bg-[#c41e3a]/10"
+            className="rounded border border-[#c41e3a]/50 px-2.5 py-0.5 text-[10px] text-[#c41e3a] hover:bg-[#c41e3a]/10"
             data-testid="almanac-prev"
-            onClick={() => setCursor((c) => shiftDate(c.year, c.month, c.day, -1))}
+            onClick={() =>
+              setCursor((c) => shiftDate(c.year, c.month, c.day, -1))
+            }
           >
             前一天
           </button>
           <button
             type="button"
-            className="rounded border border-[#c41e3a]/50 px-3 py-0.5 text-xs text-[#c41e3a] hover:bg-[#c41e3a]/10"
+            className="rounded border border-[#c41e3a]/50 px-2.5 py-0.5 text-[10px] text-[#c41e3a] hover:bg-[#c41e3a]/10"
             data-testid="almanac-next"
-            onClick={() => setCursor((c) => shiftDate(c.year, c.month, c.day, 1))}
+            onClick={() =>
+              setCursor((c) => shiftDate(c.year, c.month, c.day, 1))
+            }
           >
             后一天
           </button>
         </div>
-      ) : (
-        <div className="h-2" />
-      )}
+      ) : null}
     </div>
   );
 }
