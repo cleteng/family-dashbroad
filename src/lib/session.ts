@@ -5,6 +5,8 @@ export interface SessionData {
   userId?: string;
   email?: string;
   isLoggedIn: boolean;
+  /** CSRF state for Google OAuth (TASK-019). Cleared after callback. */
+  googleOAuthState?: string;
 }
 
 export const SESSION_COOKIE_NAME = "fd_session";
