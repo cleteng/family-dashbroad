@@ -10,10 +10,12 @@ import { registerWidget } from "./registry";
 import { clockDefinition } from "./clock/definition";
 import { calendarDefinition } from "./calendar/definition";
 import { chineseAlmanacDefinition } from "./chinese-almanac/definition";
+import { weatherDefinition } from "./weather/definition";
 
 registerWidget(clockDefinition);
 registerWidget(calendarDefinition);
 registerWidget(chineseAlmanacDefinition);
+registerWidget(weatherDefinition);
 
 export {
   registerWidget,
@@ -26,6 +28,7 @@ export type { WidgetDefinition, WidgetConfigDefinition } from "./types";
 export { clockDefinition } from "./clock/definition";
 export { calendarDefinition } from "./calendar/definition";
 export { chineseAlmanacDefinition } from "./chinese-almanac/definition";
+export { weatherDefinition } from "./weather/definition";
 export {
   REGISTERED_WIDGET_TYPES,
   listWidgetConfigEntries,
