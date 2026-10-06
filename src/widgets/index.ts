@@ -9,9 +9,11 @@
 import { registerWidget } from "./registry";
 import { clockDefinition } from "./clock/definition";
 import { calendarDefinition } from "./calendar/definition";
+import { chineseAlmanacDefinition } from "./chinese-almanac/definition";
 
 registerWidget(clockDefinition);
 registerWidget(calendarDefinition);
+registerWidget(chineseAlmanacDefinition);
 
 export {
   registerWidget,
@@ -23,6 +25,7 @@ export {
 export type { WidgetDefinition, WidgetConfigDefinition } from "./types";
 export { clockDefinition } from "./clock/definition";
 export { calendarDefinition } from "./calendar/definition";
+export { chineseAlmanacDefinition } from "./chinese-almanac/definition";
 export {
   REGISTERED_WIDGET_TYPES,
   listWidgetConfigEntries,

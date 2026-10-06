@@ -11,6 +11,12 @@ import {
   calendarDefaultConfig,
   calendarMetadata,
 } from "./calendar/config";
+import {
+  CHINESE_ALMANAC_TYPE,
+  chineseAlmanacConfigSchema,
+  chineseAlmanacDefaultConfig,
+  chineseAlmanacMetadata,
+} from "./chinese-almanac/config";
 import type { z } from "zod";
 
 export type WidgetConfigEntry = {
@@ -32,6 +38,12 @@ export const widgetConfigRegistry: Record<string, WidgetConfigEntry> = {
     metadata: { ...calendarMetadata },
     defaultConfig: { ...calendarDefaultConfig },
     configSchema: calendarConfigSchema,
+  },
+  [CHINESE_ALMANAC_TYPE]: {
+    type: CHINESE_ALMANAC_TYPE,
+    metadata: { ...chineseAlmanacMetadata },
+    defaultConfig: { ...chineseAlmanacDefaultConfig },
+    configSchema: chineseAlmanacConfigSchema,
   },
 };
 

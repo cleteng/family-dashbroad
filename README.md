@@ -2,8 +2,8 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-012 complete** (Standard calendar widget).  
-Next: TASK-013 Chinese almanac widget (if planned).
+**Current status: TASK-013 complete** (Chinese almanac widget).  
+Next: further product tasks as planned.
 
 ## Tech Stack
 
