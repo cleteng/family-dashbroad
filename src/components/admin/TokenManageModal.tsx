@@ -119,11 +119,18 @@ export function TokenManageModal({
 
   async function onRegenerate(t: TokenItem) {
     if (!window.confirm("重新生成后旧链接立即失效，确定吗？")) return;
+    setError(null);
+    setCopyHint(null);
+    setRevealUrl(null); // clear so UI cannot show stale URL
     try {
       const res = await apiSend<{ token: string; displayUrl: string }>(
         `/api/dashboards/${dashboardId}/display-tokens/${t.id}/regenerate`,
         "POST",
+        {}, // ensure POST body + Content-Type
       );
+      if (!res.token || !res.displayUrl) {
+        throw new Error("重新生成响应缺少 token");
+      }
       const full = `${window.location.origin}${res.displayUrl}`;
       setRevealUrl(full);
       await load();
