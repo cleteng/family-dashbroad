@@ -4,7 +4,12 @@
  *
  * Full UI definitions (renderer/editor) live in src/widgets/index.ts → registry.
  */
-import { CLOCK_TYPE, clockConfigSchema, clockDefaultConfig, clockMetadata } from "./clock/config";
+import {
+  CLOCK_TYPE,
+  clockConfigSchema,
+  clockDefaultConfig,
+  clockMetadata,
+} from "./clock/config";
 import {
   CALENDAR_TYPE,
   calendarConfigSchema,
@@ -17,6 +22,12 @@ import {
   chineseAlmanacDefaultConfig,
   chineseAlmanacMetadata,
 } from "./chinese-almanac/config";
+import {
+  WEATHER_TYPE,
+  weatherConfigSchema,
+  weatherDefaultConfig,
+  weatherMetadata,
+} from "./weather/config";
 import type { z } from "zod";
 
 export type WidgetConfigEntry = {
@@ -45,15 +56,26 @@ export const widgetConfigRegistry: Record<string, WidgetConfigEntry> = {
     defaultConfig: { ...chineseAlmanacDefaultConfig },
     configSchema: chineseAlmanacConfigSchema,
   },
+  [WEATHER_TYPE]: {
+    type: WEATHER_TYPE,
+    metadata: { ...weatherMetadata },
+    defaultConfig: { ...weatherDefaultConfig },
+    configSchema: weatherConfigSchema,
+  },
 };
 
 /** Registered widget type strings (whitelist for create/update). */
-export const REGISTERED_WIDGET_TYPES = Object.keys(widgetConfigRegistry) as [string, ...string[]];
+export const REGISTERED_WIDGET_TYPES = Object.keys(widgetConfigRegistry) as [
+  string,
+  ...string[],
+];
 
 export function listWidgetConfigEntries(): WidgetConfigEntry[] {
   return Object.values(widgetConfigRegistry);
 }
 
-export function getWidgetConfigEntry(type: string): WidgetConfigEntry | undefined {
+export function getWidgetConfigEntry(
+  type: string,
+): WidgetConfigEntry | undefined {
   return widgetConfigRegistry[type];
 }
