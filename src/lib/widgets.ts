@@ -3,15 +3,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { widgets } from "@/db/schema/widgets";
 
-import { CLOCK_TYPE, clockConfigSchema, clockDefaultConfig } from "@/widgets/clock/config";
-
-/** Server-safe config registries (no React). Extend when adding widgets. */
-const REGISTERED_CONFIG = {
-  [CLOCK_TYPE]: {
-    defaultConfig: clockDefaultConfig as Record<string, unknown>,
-    configSchema: clockConfigSchema,
-  },
-} as const;
+import { getWidgetConfigEntry, REGISTERED_WIDGET_TYPES } from "@/widgets/config-registry";
 
 /**
  * If type is registered, merge defaultConfig + input and validate with configSchema.
@@ -23,7 +15,7 @@ export function resolveRegisteredConfig(
   type: string,
   input: Record<string, unknown> | null | undefined,
 ): Record<string, unknown> | null {
-  const reg = REGISTERED_CONFIG[type as keyof typeof REGISTERED_CONFIG];
+  const reg = getWidgetConfigEntry(type);
   if (!reg) {
     return input === undefined ? null : input;
   }
@@ -32,14 +24,8 @@ export function resolveRegisteredConfig(
   return { ...reg.defaultConfig, ...parsed } as Record<string, unknown>;
 }
 
-export const WIDGET_TYPES = [
-  "clock",
-  "weather",
-  "calendar",
-  "chinese-almanac",
-  "google-tasks",
-  "home-assistant-sensor",
-] as const;
+/** Whitelist = config-registry keys (single source of truth). */
+export const WIDGET_TYPES = REGISTERED_WIDGET_TYPES;
 
 export type WidgetType = (typeof WIDGET_TYPES)[number];
 

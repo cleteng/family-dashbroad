@@ -3,13 +3,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import GridLayout, { type Layout } from "react-grid-layout";
 import { apiGet, apiSend } from "@/lib/api-client";
-import { getWidgetDefinition, registerWidget } from "@/widgets/registry";
-import { clockDefinition } from "@/widgets/clock/definition";
+import { getWidgetDefinition } from "@/widgets/registry";
+import "@/widgets"; // register all built-in widgets
 import type { Breakpoint } from "@/lib/layouts";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
-// Ensure clock is registered in the browser
-registerWidget(clockDefinition);
 type Widget = {
   id: string;
   dashboardId: string;

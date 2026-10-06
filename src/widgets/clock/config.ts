@@ -2,6 +2,11 @@ import { z } from "zod";
 
 export const CLOCK_TYPE = "clock" as const;
 
+export const clockMetadata = {
+  name: "时钟",
+  description: "显示当前时间与日期",
+} as const;
+
 export const clockDefaultConfig = {
   timezone: "America/Toronto",
   format: "24h" as const,

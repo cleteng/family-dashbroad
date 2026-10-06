@@ -1,27 +1,20 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
-import { CLOCK_TYPE, clockDefaultConfig } from "@/widgets/clock/config";
+import { listWidgetConfigEntries } from "@/widgets/config-registry";
 
 /**
  * GET /api/widgets/registry — list registered widgets (type, metadata, defaultConfig).
- * Does not expose renderer/editor implementations.
- *
- * Keep in sync with src/widgets/index.ts registrations.
+ * Single source: src/widgets/config-registry.ts
  */
 export async function GET() {
   const auth = await requireAuth();
   if ("error" in auth) return auth.error;
 
-  const widgets = [
-    {
-      type: CLOCK_TYPE,
-      metadata: {
-        name: "时钟",
-        description: "显示当前时间与日期",
-      },
-      defaultConfig: { ...clockDefaultConfig },
-    },
-  ];
+  const widgets = listWidgetConfigEntries().map((e) => ({
+    type: e.type,
+    metadata: e.metadata,
+    defaultConfig: { ...e.defaultConfig },
+  }));
 
   return NextResponse.json({ widgets });
 }

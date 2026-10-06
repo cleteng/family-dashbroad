@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getWidgetDefinition, registerWidget } from "@/widgets/registry";
-import { clockDefinition } from "@/widgets/clock/definition";
+import { getWidgetDefinition } from "@/widgets/registry";
+import "@/widgets"; // register all built-in widgets
 import type { Breakpoint } from "@/lib/layouts";
 import type { DisplayLayoutEntry, DisplayWidget } from "@/lib/display-tokens";
-
-registerWidget(clockDefinition);
 
 function pickBreakpoint(width: number): Breakpoint {
   if (width >= 1024) return "desktop";

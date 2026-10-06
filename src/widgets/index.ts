@@ -3,13 +3,15 @@
  *
  * To add a new widget:
  * 1. Create src/widgets/<name>/ with config.ts, Renderer, Editor, definition.ts
- * 2. Import the definition here and call registerWidget(def)
- * 3. Add the type string to WIDGET_TYPES in src/lib/widgets.ts if needed
+ * 2. Add config entry to src/widgets/config-registry.ts
+ * 3. Import definition here and call registerWidget(def)
  */
 import { registerWidget } from "./registry";
 import { clockDefinition } from "./clock/definition";
+import { calendarDefinition } from "./calendar/definition";
 
 registerWidget(clockDefinition);
+registerWidget(calendarDefinition);
 
 export {
   registerWidget,
@@ -20,4 +22,10 @@ export {
 } from "./registry";
 export type { WidgetDefinition, WidgetConfigDefinition } from "./types";
 export { clockDefinition } from "./clock/definition";
-export { clockConfigSchema, clockDefaultConfig, mergeClockConfig } from "./clock/config";
+export { calendarDefinition } from "./calendar/definition";
+export {
+  REGISTERED_WIDGET_TYPES,
+  listWidgetConfigEntries,
+  getWidgetConfigEntry,
+  widgetConfigRegistry,
+} from "./config-registry";
