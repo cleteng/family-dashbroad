@@ -90,15 +90,12 @@ export function WeatherView({
       {/* Current */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <div
-            className="truncate text-xs text-zinc-400"
-            data-testid="weather-location"
-          >
+          <div className="truncate text-xs text-zinc-400" data-testid="weather-location">
             {location.name}
           </div>
           <div className="mt-0.5 flex items-baseline gap-2">
             <span
-              className="text-4xl font-semibold tabular-nums tracking-tight"
+              className="text-4xl font-semibold tracking-tight tabular-nums"
               data-testid="weather-temp"
             >
               {formatTemp(now.temperature)}
@@ -107,22 +104,13 @@ export function WeatherView({
               {weatherIconEmoji(now.icon)}
             </span>
           </div>
-          <div
-            className="mt-1 text-sm text-zinc-300"
-            data-testid="weather-condition"
-          >
+          <div className="mt-1 text-sm text-zinc-300" data-testid="weather-condition">
             {now.condition}
           </div>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-zinc-400">
-            <span data-testid="weather-feels">
-              体感 {formatTemp(now.feelsLike)}
-            </span>
-            <span data-testid="weather-humidity">
-              湿度 {Math.round(now.humidity)}%
-            </span>
-            <span data-testid="weather-wind">
-              风速 {Math.round(now.windSpeed)} km/h
-            </span>
+            <span data-testid="weather-feels">体感 {formatTemp(now.feelsLike)}</span>
+            <span data-testid="weather-humidity">湿度 {Math.round(now.humidity)}%</span>
+            <span data-testid="weather-wind">风速 {Math.round(now.windSpeed)} km/h</span>
           </div>
         </div>
       </div>
@@ -142,9 +130,7 @@ export function WeatherView({
               className="flex flex-col items-center gap-0.5 px-0.5 text-center"
               data-testid="weather-forecast-day"
             >
-              <div className="text-[10px] text-zinc-400">
-                {weekdayLabel(day.date)}
-              </div>
+              <div className="text-[10px] text-zinc-400">{weekdayLabel(day.date)}</div>
               <div className="text-base" aria-hidden>
                 {weatherIconEmoji(day.icon)}
               </div>
@@ -159,10 +145,7 @@ export function WeatherView({
       ) : null}
 
       {/* Updated */}
-      <div
-        className="mt-auto text-[10px] text-zinc-500"
-        data-testid="weather-updated"
-      >
+      <div className="mt-auto text-[10px] text-zinc-500" data-testid="weather-updated">
         {now.stale ? `缓存 · ${relative}` : relative}
       </div>
     </div>

@@ -26,12 +26,8 @@ describe("mergeTodoConfig", () => {
       listId: "",
       refreshInterval: 300,
     });
-    expect(
-      mergeTodoConfig({ listId: "L1", refreshInterval: 10 }).refreshInterval,
-    ).toBe(30);
-    expect(
-      mergeTodoConfig({ listId: "L1", refreshInterval: 99999 }).refreshInterval,
-    ).toBe(3600);
+    expect(mergeTodoConfig({ listId: "L1", refreshInterval: 10 }).refreshInterval).toBe(30);
+    expect(mergeTodoConfig({ listId: "L1", refreshInterval: 99999 }).refreshInterval).toBe(3600);
   });
 });
 
@@ -46,9 +42,7 @@ describe("formatSyncRelative", () => {
 describe("TodoView", () => {
   it("renders task list", () => {
     const html = renderToStaticMarkup(
-      <TodoView
-        view={{ kind: "ready", tasks: sample, syncedAt: Date.now() }}
-      />,
+      <TodoView view={{ kind: "ready", tasks: sample, syncedAt: Date.now() }} />,
     );
     expect(html).toContain("Buy milk");
     expect(html).toContain("Call mom");
@@ -64,25 +58,18 @@ describe("TodoView", () => {
   });
 
   it("shows not_connected guide", () => {
-    const html = renderToStaticMarkup(
-      <TodoView view={{ kind: "not_connected" }} />,
-    );
+    const html = renderToStaticMarkup(<TodoView view={{ kind: "not_connected" }} />);
     expect(html).toContain("Google 未连接");
     expect(html).toContain("去连接 Google");
     expect(html).toContain("/admin/settings/google");
   });
 
   it("shows loading / error with retry", () => {
-    const loading = renderToStaticMarkup(
-      <TodoView view={{ kind: "loading" }} />,
-    );
+    const loading = renderToStaticMarkup(<TodoView view={{ kind: "loading" }} />);
     expect(loading).toContain("同步中");
     const onRetry = vi.fn();
     const err = renderToStaticMarkup(
-      <TodoView
-        view={{ kind: "error", message: "同步失败" }}
-        actions={{ onRetry }}
-      />,
+      <TodoView view={{ kind: "error", message: "同步失败" }} actions={{ onRetry }} />,
     );
     expect(err).toContain("点重试");
   });

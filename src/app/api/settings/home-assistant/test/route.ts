@@ -23,18 +23,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json(
-      { connected: false, error: "连接失败" },
-      { status: 400 },
-    );
+    return NextResponse.json({ connected: false, error: "连接失败" }, { status: 400 });
   }
 
   const parsed = testSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json(
-      { connected: false, error: "连接失败" },
-      { status: 400 },
-    );
+    return NextResponse.json({ connected: false, error: "连接失败" }, { status: 400 });
   }
 
   const status = await testHAConnection(parsed.data.url, parsed.data.token);

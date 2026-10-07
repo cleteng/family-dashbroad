@@ -9,14 +9,8 @@ import {
   weatherDefaultConfig,
   weatherIconEmoji,
 } from "@/widgets/weather/config";
-import {
-  WeatherView,
-  type WeatherApiPayload,
-} from "@/widgets/weather/WeatherView";
-import {
-  REGISTERED_WIDGET_TYPES,
-  getWidgetConfigEntry,
-} from "@/widgets/config-registry";
+import { WeatherView, type WeatherApiPayload } from "@/widgets/weather/WeatherView";
+import { REGISTERED_WIDGET_TYPES, getWidgetConfigEntry } from "@/widgets/config-registry";
 
 const sampleData: WeatherApiPayload = {
   location: { lat: 45.53, lon: -73.52, name: "Longueuil" },
@@ -71,12 +65,8 @@ describe("weatherConfigSchema", () => {
   });
 
   it("rejects forecastDays out of range", () => {
-    expect(weatherConfigSchema.safeParse({ forecastDays: 0 }).success).toBe(
-      false,
-    );
-    expect(weatherConfigSchema.safeParse({ forecastDays: 8 }).success).toBe(
-      false,
-    );
+    expect(weatherConfigSchema.safeParse({ forecastDays: 0 }).success).toBe(false);
+    expect(weatherConfigSchema.safeParse({ forecastDays: 8 }).success).toBe(false);
   });
 });
 
@@ -116,9 +106,7 @@ describe("weatherIconEmoji", () => {
 
 describe("WeatherView", () => {
   it("renders temperature, icon, and forecast days", () => {
-    const html = renderToString(
-      React.createElement(WeatherView, { data: sampleData }),
-    );
+    const html = renderToString(React.createElement(WeatherView, { data: sampleData }));
     expect(html).toContain("weather-widget");
     expect(html).toContain("12°");
     expect(html).toContain("Partly Cloudy");
@@ -134,9 +122,7 @@ describe("WeatherView", () => {
   });
 
   it("shows relative update time for fresh data", () => {
-    const html = renderToString(
-      React.createElement(WeatherView, { data: sampleData }),
-    );
+    const html = renderToString(React.createElement(WeatherView, { data: sampleData }));
     expect(html).toContain("分钟前更新");
     expect(html).not.toContain("缓存");
   });
@@ -146,30 +132,22 @@ describe("WeatherView", () => {
       ...sampleData,
       now: { ...sampleData.now, stale: true },
     };
-    const html = renderToString(
-      React.createElement(WeatherView, { data: stale }),
-    );
+    const html = renderToString(React.createElement(WeatherView, { data: stale }));
     expect(html).toContain("缓存");
     expect(html).toContain('data-stale="true"');
   });
 
   it("shows friendly message when null / error", () => {
-    const htmlNull = renderToString(
-      React.createElement(WeatherView, { data: null }),
-    );
+    const htmlNull = renderToString(React.createElement(WeatherView, { data: null }));
     expect(htmlNull).toContain("天气暂不可用");
     expect(htmlNull).toContain('data-state="unavailable"');
 
-    const htmlErr = renderToString(
-      React.createElement(WeatherView, { data: null, error: true }),
-    );
+    const htmlErr = renderToString(React.createElement(WeatherView, { data: null, error: true }));
     expect(htmlErr).toContain("天气暂不可用");
   });
 
   it("shows loading state", () => {
-    const html = renderToString(
-      React.createElement(WeatherView, { data: null, loading: true }),
-    );
+    const html = renderToString(React.createElement(WeatherView, { data: null, loading: true }));
     expect(html).toContain("加载中");
     expect(html).toContain('data-state="loading"');
   });

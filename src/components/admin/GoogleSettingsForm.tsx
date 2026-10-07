@@ -79,10 +79,7 @@ export function GoogleSettingsForm() {
 
   if (loading) {
     return (
-      <div
-        className="text-sm text-zinc-500"
-        data-testid="google-settings-loading"
-      >
+      <div className="text-sm text-zinc-500" data-testid="google-settings-loading">
         加载中…
       </div>
     );
@@ -109,12 +106,8 @@ export function GoogleSettingsForm() {
       </div>
 
       {!status?.configured ? (
-        <p
-          className="text-sm text-amber-700"
-          data-testid="google-not-configured"
-        >
-          尚未配置{" "}
-          <code className="rounded bg-zinc-100 px-1">GOOGLE_CLIENT_ID</code> /{" "}
+        <p className="text-sm text-amber-700" data-testid="google-not-configured">
+          尚未配置 <code className="rounded bg-zinc-100 px-1">GOOGLE_CLIENT_ID</code> /{" "}
           <code className="rounded bg-zinc-100 px-1">GOOGLE_CLIENT_SECRET</code>
           。请在 Google Cloud Console 创建 OAuth 客户端后写入环境变量。
         </p>
@@ -148,11 +141,7 @@ export function GoogleSettingsForm() {
 
       {message ? (
         <p
-          className={
-            messageKind === "ok"
-              ? "text-sm text-emerald-700"
-              : "text-sm text-red-600"
-          }
+          className={messageKind === "ok" ? "text-sm text-emerald-700" : "text-sm text-red-600"}
           data-testid="google-message"
         >
           {message}
@@ -160,8 +149,7 @@ export function GoogleSettingsForm() {
       ) : null}
 
       <p className="text-xs leading-relaxed text-zinc-500">
-        仅申请 Google Tasks 权限。Access / Refresh Token
-        不会出现在页面或接口响应中。
+        仅申请 Google Tasks 权限。Access / Refresh Token 不会出现在页面或接口响应中。
       </p>
     </div>
   );

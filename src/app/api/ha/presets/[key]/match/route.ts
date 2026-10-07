@@ -8,10 +8,7 @@ export const dynamic = "force-dynamic";
 /**
  * GET /api/ha/presets/[key]/match — entities matching preset keywords.
  */
-export async function GET(
-  _req: NextRequest,
-  ctx: { params: Promise<{ key: string }> },
-) {
+export async function GET(_req: NextRequest, ctx: { params: Promise<{ key: string }> }) {
   const auth = await requireAuth();
   if ("error" in auth) return auth.error;
 
@@ -23,10 +20,7 @@ export async function GET(
 
   const listed = await listHASensorEntities();
   if (!listed.ok) {
-    if (
-      listed.reason === "not_configured" ||
-      listed.reason === "unauthorized"
-    ) {
+    if (listed.reason === "not_configured" || listed.reason === "unauthorized") {
       return NextResponse.json(
         {
           preset: { key: preset.key, name: preset.name },

@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveGoogleTasksActorUserId } from "@/lib/google-tasks-actor";
-import {
-  completeTask,
-  googleTasksErrorHttpStatus,
-  isGoogleTasksError,
-} from "@/lib/google-tasks";
+import { completeTask, googleTasksErrorHttpStatus, isGoogleTasksError } from "@/lib/google-tasks";
 
 export const dynamic = "force-dynamic";
 
@@ -24,10 +20,7 @@ function decodeId(raw: string): string {
 export async function POST(_req: NextRequest, ctx: RouteCtx) {
   const userId = await resolveGoogleTasksActorUserId();
   if (!userId) {
-    return NextResponse.json(
-      { error: "NOT_CONNECTED", message: "Google 未连接" },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: "NOT_CONNECTED", message: "Google 未连接" }, { status: 503 });
   }
 
   const params = await ctx.params;
@@ -50,9 +43,6 @@ export async function POST(_req: NextRequest, ctx: RouteCtx) {
         { status: googleTasksErrorHttpStatus(err) },
       );
     }
-    return NextResponse.json(
-      { error: "API_ERROR", message: "请求失败" },
-      { status: 502 },
-    );
+    return NextResponse.json({ error: "API_ERROR", message: "请求失败" }, { status: 502 });
   }
 }

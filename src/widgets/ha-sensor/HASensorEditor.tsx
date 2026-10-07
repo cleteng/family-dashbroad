@@ -113,9 +113,7 @@ export function HASensorEditor({
               disabled={matching}
               className={
                 "flex flex-col items-center gap-0.5 rounded border px-1 py-2 text-center hover:bg-zinc-50 disabled:opacity-50 " +
-                (activePreset === p.key
-                  ? "border-zinc-900 bg-zinc-50"
-                  : "border-zinc-200")
+                (activePreset === p.key ? "border-zinc-900 bg-zinc-50" : "border-zinc-200")
               }
               data-testid={`ha-preset-${p.key}`}
               title={p.unit ? `${p.name} (${p.unit})` : p.name}
@@ -123,18 +121,13 @@ export function HASensorEditor({
               <span className="text-lg leading-none" aria-hidden>
                 {p.icon}
               </span>
-              <span className="text-[10px] leading-tight text-zinc-700">
-                {p.name}
-              </span>
+              <span className="text-[10px] leading-tight text-zinc-700">{p.name}</span>
             </button>
           ))}
         </div>
         {matching ? <div className="text-xs text-zinc-400">匹配中…</div> : null}
         {matchMessage ? (
-          <div
-            className="text-xs text-zinc-500"
-            data-testid="ha-preset-message"
-          >
+          <div className="text-xs text-zinc-500" data-testid="ha-preset-message">
             {matchMessage}
           </div>
         ) : null}
@@ -165,10 +158,7 @@ export function HASensorEditor({
         {loadingList ? (
           <div className="text-xs text-zinc-400">加载实体列表…</div>
         ) : listError ? (
-          <div
-            className="text-xs text-red-600"
-            data-testid="ha-sensor-list-error"
-          >
+          <div className="text-xs text-red-600" data-testid="ha-sensor-list-error">
             {listError}
           </div>
         ) : null}
@@ -179,8 +169,7 @@ export function HASensorEditor({
           data-testid="ha-sensor-entity"
         >
           <option value="">— 选择实体 —</option>
-          {cfg.entityId &&
-          !entities.some((e) => e.entityId === cfg.entityId) ? (
+          {cfg.entityId && !entities.some((e) => e.entityId === cfg.entityId) ? (
             <option value={cfg.entityId}>{cfg.entityId}</option>
           ) : null}
           {entities.map((e) => (

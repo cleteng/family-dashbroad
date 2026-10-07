@@ -104,7 +104,7 @@ export function HASensorView({ view }: { view: HASensorViewState }) {
       </div>
       <div className="flex items-baseline gap-1.5">
         <span
-          className="text-3xl font-semibold tabular-nums tracking-tight"
+          className="text-3xl font-semibold tracking-tight tabular-nums"
           data-testid="ha-sensor-state"
         >
           {data.state}
@@ -116,10 +116,7 @@ export function HASensorView({ view }: { view: HASensorViewState }) {
         ) : null}
       </div>
       {relative ? (
-        <div
-          className="text-[10px] text-zinc-500"
-          data-testid="ha-sensor-updated"
-        >
+        <div className="text-[10px] text-zinc-500" data-testid="ha-sensor-updated">
           {relative}
         </div>
       ) : null}

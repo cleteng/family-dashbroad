@@ -16,10 +16,7 @@ test.describe("Weather widget", () => {
     await page.getByTestId("create-dashboard").click();
     await expect(page.getByText(boardName)).toBeVisible({ timeout: 15000 });
 
-    await page
-      .locator("li", { hasText: boardName })
-      .getByRole("link", { name: "编辑" })
-      .click();
+    await page.locator("li", { hasText: boardName }).getByRole("link", { name: "编辑" }).click();
     await page.waitForURL(/\/admin\/dashboards\//, { timeout: 30000 });
 
     await page.getByTestId("add-widget").click();
@@ -33,12 +30,9 @@ test.describe("Weather widget", () => {
     });
 
     const dashId = page.url().split("/admin/dashboards/")[1]?.split(/[?#]/)[0];
-    const tokenRes = await page.request.post(
-      `/api/dashboards/${dashId}/display-tokens`,
-      {
-        data: { name: "weather-e2e" },
-      },
-    );
+    const tokenRes = await page.request.post(`/api/dashboards/${dashId}/display-tokens`, {
+      data: { name: "weather-e2e" },
+    });
     expect(tokenRes.ok()).toBeTruthy();
     const { displayUrl } = (await tokenRes.json()) as { displayUrl: string };
 
@@ -55,9 +49,7 @@ test.describe("Weather widget", () => {
     await expect(dpage.getByTestId("weather-widget")).toBeVisible({
       timeout: 20000,
     });
-    const state = await dpage
-      .getByTestId("weather-widget")
-      .getAttribute("data-state");
+    const state = await dpage.getByTestId("weather-widget").getAttribute("data-state");
     expect(["ready", "unavailable", "loading"]).toContain(state);
     await anon.close();
   });

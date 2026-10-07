@@ -22,9 +22,7 @@ export function TodoEditor({
     setLoading(true);
     setListError(null);
     try {
-      const data = await apiGet<{ lists: ListItem[]; error?: string }>(
-        "/api/google/tasks/lists",
-      );
+      const data = await apiGet<{ lists: ListItem[]; error?: string }>("/api/google/tasks/lists");
       setLists(data.lists ?? []);
       if (data.error === "NOT_CONNECTED") {
         setListError("Google 未连接");

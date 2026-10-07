@@ -7,10 +7,7 @@ export const dynamic = "force-dynamic";
  * GET /api/ha/states/[entityId]
  * Public (display board has no session). Token stays server-side.
  */
-export async function GET(
-  _req: NextRequest,
-  ctx: { params: Promise<{ entityId: string }> },
-) {
+export async function GET(_req: NextRequest, ctx: { params: Promise<{ entityId: string }> }) {
   const { entityId: raw } = await ctx.params;
   // Next may pass encoded segment; decode once
   let entityId = raw;
@@ -30,10 +27,7 @@ export async function GET(
   const result = await fetchHAEntityState(entityId.trim());
 
   if (!result.ok) {
-    if (
-      result.reason === "not_configured" ||
-      result.reason === "unauthorized"
-    ) {
+    if (result.reason === "not_configured" || result.reason === "unauthorized") {
       return NextResponse.json(
         { error: "ha_unavailable", message: "HA 未连接" },
         { status: 503, headers: { "Cache-Control": "no-store" } },

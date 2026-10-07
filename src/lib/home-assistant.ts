@@ -37,9 +37,7 @@ type FetchLike = typeof fetch;
 function dataDir(): string {
   const dbUrl = process.env.DATABASE_URL ?? "file:./data/app.db";
   // file:./data/app.db → ./data
-  const filePath = dbUrl.startsWith("file:")
-    ? dbUrl.slice("file:".length)
-    : dbUrl;
+  const filePath = dbUrl.startsWith("file:") ? dbUrl.slice("file:".length) : dbUrl;
   return path.dirname(path.resolve(filePath));
 }
 
@@ -181,9 +179,7 @@ export async function testHAConnection(
 /**
  * Test using currently saved credentials.
  */
-export async function testSavedHAConnection(
-  fetchImpl: FetchLike = fetch,
-): Promise<HAStatus> {
+export async function testSavedHAConnection(fetchImpl: FetchLike = fetch): Promise<HAStatus> {
   const stored = resolveStored();
   if (!stored.url || !stored.token) {
     return { connected: false, error: GENERIC_FAIL };
@@ -265,10 +261,7 @@ function mapStateBody(body: Record<string, unknown>): HAEntityState | null {
     body.attributes && typeof body.attributes === "object"
       ? (body.attributes as Record<string, unknown>)
       : {};
-  const unit =
-    typeof attrs.unit_of_measurement === "string"
-      ? attrs.unit_of_measurement
-      : null;
+  const unit = typeof attrs.unit_of_measurement === "string" ? attrs.unit_of_measurement : null;
   const friendlyName =
     typeof attrs.friendly_name === "string" && attrs.friendly_name
       ? attrs.friendly_name
@@ -298,8 +291,7 @@ export async function fetchHAEntityState(
 ): Promise<HAFetchResult<HAEntityState>> {
   const id = entityId.trim();
   if (!id) return { ok: false, reason: "not_found" };
-  if (!getHACredentialsForServer())
-    return { ok: false, reason: "not_configured" };
+  if (!getHACredentialsForServer()) return { ok: false, reason: "not_configured" };
 
   const encoded = encodeURIComponent(id);
   const res = await haFetch(`/api/states/${encoded}`, fetchImpl);
@@ -315,12 +307,7 @@ export async function fetchHAEntityState(
   if (res.status === 404) {
     return { ok: false, reason: "not_found" };
   }
-  if (
-    res.status < 200 ||
-    res.status >= 300 ||
-    !res.json ||
-    typeof res.json !== "object"
-  ) {
+  if (res.status < 200 || res.status >= 300 || !res.json || typeof res.json !== "object") {
     return { ok: false, reason: "error" };
   }
   const mapped = mapStateBody(res.json as Record<string, unknown>);
@@ -336,8 +323,7 @@ const SENSOR_DOMAINS = new Set(["sensor", "binary_sensor"]);
 export async function listHASensorEntities(
   fetchImpl: FetchLike = fetch,
 ): Promise<HAFetchResult<HAEntityListItem[]>> {
-  if (!getHACredentialsForServer())
-    return { ok: false, reason: "not_configured" };
+  if (!getHACredentialsForServer()) return { ok: false, reason: "not_configured" };
 
   const res = await haFetch("/api/states", fetchImpl);
   if (res.status === 0) {

@@ -19,13 +19,9 @@ export function getGoogleClientConfig(): {
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim() ?? "";
   if (!clientId || !clientSecret) return null;
 
-  const appUrl = (process.env.APP_URL ?? "http://localhost:3000").replace(
-    /\/+$/,
-    "",
-  );
+  const appUrl = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/+$/, "");
   const redirectUri =
-    process.env.GOOGLE_REDIRECT_URI?.trim() ||
-    `${appUrl}/api/auth/google/callback`;
+    process.env.GOOGLE_REDIRECT_URI?.trim() || `${appUrl}/api/auth/google/callback`;
 
   return { clientId, clientSecret, redirectUri };
 }
@@ -80,16 +76,12 @@ export async function exchangeCodeForTokens(
     throw new Error("token_exchange_failed");
   }
   const body = (await res.json()) as Partial<TokenExchangeResult>;
-  if (
-    typeof body.access_token !== "string" ||
-    typeof body.expires_in !== "number"
-  ) {
+  if (typeof body.access_token !== "string" || typeof body.expires_in !== "number") {
     throw new Error("token_exchange_invalid");
   }
   return {
     access_token: body.access_token,
-    refresh_token:
-      typeof body.refresh_token === "string" ? body.refresh_token : undefined,
+    refresh_token: typeof body.refresh_token === "string" ? body.refresh_token : undefined,
     expires_in: body.expires_in,
     token_type: body.token_type,
     scope: body.scope,
@@ -121,10 +113,7 @@ export async function refreshAccessToken(
     access_token?: string;
     expires_in?: number;
   };
-  if (
-    typeof body.access_token !== "string" ||
-    typeof body.expires_in !== "number"
-  ) {
+  if (typeof body.access_token !== "string" || typeof body.expires_in !== "number") {
     throw new Error("token_refresh_invalid");
   }
   return { access_token: body.access_token, expires_in: body.expires_in };

@@ -2,10 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { getCalendarDay } from "@/lib/calendar";
-import {
-  almanacDateColorClass,
-  mergeChineseAlmanacConfig,
-} from "./config";
+import { almanacDateColorClass, mergeChineseAlmanacConfig } from "./config";
 
 const WEEKDAY_EN: Record<string, string> = {
   日: "Sunday",
@@ -54,11 +51,7 @@ function dayOfYear(y: number, m: number, d: number): number {
   return Math.floor((now.getTime() - start.getTime()) / 86400000);
 }
 
-export function AlmanacRenderer({
-  config,
-}: {
-  config: Record<string, unknown>;
-}) {
+export function AlmanacRenderer({ config }: { config: Record<string, unknown> }) {
   const cfg = mergeChineseAlmanacConfig(config);
   const today = new Date();
   const [cursor, setCursor] = useState({
@@ -93,8 +86,8 @@ export function AlmanacRenderer({
         className="relative flex h-7 shrink-0 items-center justify-center bg-gradient-to-b from-[#e03131] to-[#c41e3a]"
         aria-hidden
       >
-        <div className="absolute left-3 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full border border-[#d4a017] bg-[#b8860b]" />
-        <div className="absolute right-3 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full border border-[#d4a017] bg-[#b8860b]" />
+        <div className="absolute top-1/2 left-3 h-2 w-2 -translate-y-1/2 rounded-full border border-[#d4a017] bg-[#b8860b]" />
+        <div className="absolute top-1/2 right-3 h-2 w-2 -translate-y-1/2 rounded-full border border-[#d4a017] bg-[#b8860b]" />
       </div>
 
       <div className="mt-1.5 flex items-center justify-between px-2 text-[12px] font-semibold tracking-wider">
@@ -111,7 +104,7 @@ export function AlmanacRenderer({
         </div>
         <div className="flex min-w-0 flex-1 flex-col items-center">
           <div
-            className={`text-[64px] font-black leading-none tabular-nums md:text-[76px] ${dateColor}`}
+            className={`text-[64px] leading-none font-black tabular-nums md:text-[76px] ${dateColor}`}
             data-testid="almanac-day-number"
             style={{ fontFamily: "Georgia, 'Noto Serif SC', serif" }}
           >
@@ -171,21 +164,12 @@ export function AlmanacRenderer({
         </div>
 
         <div className="rounded border border-[#c41e3a]/40 p-1">
-          <div className="mb-0.5 text-center text-[11px] font-bold text-[#2d6a4f]">
-            今日吉时
-          </div>
-          <div
-            className="grid grid-cols-4 gap-0.5 text-center"
-            data-testid="almanac-times"
-          >
+          <div className="mb-0.5 text-center text-[11px] font-bold text-[#2d6a4f]">今日吉时</div>
+          <div className="grid grid-cols-4 gap-0.5 text-center" data-testid="almanac-times">
             {info.times.map((t) => (
               <div key={t.zhi} className="leading-tight">
                 <div className="text-[#2d6a4f]">{t.zhi}</div>
-                <div
-                  className={
-                    t.luck === "吉" ? "text-[#c41e3a]" : "text-zinc-400"
-                  }
-                >
+                <div className={t.luck === "吉" ? "text-[#c41e3a]" : "text-zinc-400"}>
                   {t.luck === "吉" ? "●" : "○"}
                 </div>
               </div>
@@ -242,9 +226,7 @@ export function AlmanacRenderer({
             type="button"
             className="rounded border border-[#c41e3a]/50 px-2.5 py-0.5 text-[10px] text-[#c41e3a] hover:bg-[#c41e3a]/10"
             data-testid="almanac-prev"
-            onClick={() =>
-              setCursor((c) => shiftDate(c.year, c.month, c.day, -1))
-            }
+            onClick={() => setCursor((c) => shiftDate(c.year, c.month, c.day, -1))}
           >
             前一天
           </button>
@@ -252,9 +234,7 @@ export function AlmanacRenderer({
             type="button"
             className="rounded border border-[#c41e3a]/50 px-2.5 py-0.5 text-[10px] text-[#c41e3a] hover:bg-[#c41e3a]/10"
             data-testid="almanac-next"
-            onClick={() =>
-              setCursor((c) => shiftDate(c.year, c.month, c.day, 1))
-            }
+            onClick={() => setCursor((c) => shiftDate(c.year, c.month, c.day, 1))}
           >
             后一天
           </button>

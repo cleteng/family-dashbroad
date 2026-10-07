@@ -28,18 +28,13 @@ export function mergeWeatherConfig(
   const raw = partial ?? {};
   // Clamp forecastDays before schema parse so out-of-range values don't throw.
   let forecastDaysInput: number | undefined;
-  if (
-    typeof raw.forecastDays === "number" &&
-    Number.isFinite(raw.forecastDays)
-  ) {
+  if (typeof raw.forecastDays === "number" && Number.isFinite(raw.forecastDays)) {
     forecastDaysInput = Math.min(7, Math.max(1, Math.round(raw.forecastDays)));
   }
   const base = {
     ...weatherDefaultConfig,
     ...raw,
-    ...(forecastDaysInput !== undefined
-      ? { forecastDays: forecastDaysInput }
-      : {}),
+    ...(forecastDaysInput !== undefined ? { forecastDays: forecastDaysInput } : {}),
   };
   const parsed = weatherConfigSchema.parse(base);
   return {
@@ -75,10 +70,7 @@ export function weatherIconEmoji(icon: string): string {
 }
 
 /** Relative time in Chinese, e.g. "10 分钟前更新". */
-export function formatUpdatedRelative(
-  updatedAt: Date | string,
-  now = new Date(),
-): string {
+export function formatUpdatedRelative(updatedAt: Date | string, now = new Date()): string {
   const t = typeof updatedAt === "string" ? new Date(updatedAt) : updatedAt;
   const diffMs = Math.max(0, now.getTime() - t.getTime());
   const mins = Math.floor(diffMs / 60_000);

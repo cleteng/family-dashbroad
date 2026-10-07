@@ -18,16 +18,11 @@ export default async function HomeAssistantSettingsPage() {
   return (
     <main className="mx-auto max-w-lg p-6 md:p-8">
       <div className="mb-6">
-        <Link
-          href="/admin"
-          className="text-sm text-zinc-500 hover:text-zinc-800"
-        >
+        <Link href="/admin" className="text-sm text-zinc-500 hover:text-zinc-800">
           ← 返回看板管理
         </Link>
         <h1 className="mt-3 text-2xl font-semibold">Home Assistant</h1>
-        <p className="mt-1 text-sm text-zinc-600">
-          配置连接，供后续传感器 / 开关小部件使用
-        </p>
+        <p className="mt-1 text-sm text-zinc-600">配置连接，供后续传感器 / 开关小部件使用</p>
       </div>
       <HASettingsForm />
     </main>

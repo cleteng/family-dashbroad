@@ -46,4 +46,3 @@ describe("getCalendarDay almanac extras", () => {
     expect(["吉", "凶"]).toContain(d.times[0].luck);
   });
 });
-

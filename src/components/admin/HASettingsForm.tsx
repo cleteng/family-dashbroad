@@ -73,9 +73,7 @@ export function HASettingsForm() {
       if (res.connected) {
         setConnected(true);
         setVersion(res.version);
-        setMessage(
-          res.version ? `连接成功 · Home Assistant ${res.version}` : "连接成功",
-        );
+        setMessage(res.version ? `连接成功 · Home Assistant ${res.version}` : "连接成功");
         setMessageKind("ok");
       } else {
         setConnected(false);
@@ -173,9 +171,7 @@ export function HASettingsForm() {
         <span className="text-zinc-700">
           长期访问令牌
           {hasToken ? (
-            <span className="ml-1 font-normal text-zinc-400">
-              （留空则保留已保存的 Token）
-            </span>
+            <span className="ml-1 font-normal text-zinc-400">（留空则保留已保存的 Token）</span>
           ) : null}
         </span>
         <input
@@ -212,11 +208,7 @@ export function HASettingsForm() {
 
       {message ? (
         <p
-          className={
-            messageKind === "ok"
-              ? "text-sm text-emerald-700"
-              : "text-sm text-red-600"
-          }
+          className={messageKind === "ok" ? "text-sm text-emerald-700" : "text-sm text-red-600"}
           data-testid="ha-message"
         >
           {message}

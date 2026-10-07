@@ -1,18 +1,19 @@
 /**
- * Weather data layer (TASK-014).
- * Open-Meteo only — no API key. In-memory cache + stale fallback.
+ * Weather data layer (TASK-014) + TASK-022 cache.
+ * Open-Meteo only — no API key.
+ * Cached server-side as `weather:{postalCode}` (see `@/lib/cache`).
  */
+
+import { type CacheHit, getCached, weatherCacheKey, weatherTtlMs } from "@/lib/cache";
 
 const GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search";
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 
-const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
 const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_RETRIES = 1;
 
 /** Default location: Longueuil, QC (postal J4L 3B3). Overridable via env. */
-export const DEFAULT_POSTAL_CODE =
-  process.env.WEATHER_DEFAULT_POSTAL?.trim() || "J4L 3B3";
+export const DEFAULT_POSTAL_CODE = process.env.WEATHER_DEFAULT_POSTAL?.trim() || "J4L 3B3";
 
 /** Known coords for default postal when geocoding returns empty (Open-Meteo postal support is limited). */
 const DEFAULT_LOCATION = {
@@ -51,16 +52,10 @@ export interface ResolvedLocation {
   name: string;
 }
 
-type CacheEntry = {
-  data: WeatherResult;
-  fetchedAt: number;
+export type WeatherBundle = {
+  location: ResolvedLocation;
+  result: WeatherResult;
 };
-
-const weatherCache = new Map<string, CacheEntry>();
-
-function cacheKey(lat: number, lon: number): string {
-  return `${lat.toFixed(4)},${lon.toFixed(4)}`;
-}
 
 /** Normalize Canadian postal: strip spaces, uppercase. */
 export function normalizePostalCode(postalCode: string): string {
@@ -78,16 +73,12 @@ export function mapWeatherCode(code: number): {
   if (code === 2) return { condition: "Partly Cloudy", icon: "partly-cloudy" };
   if (code === 3) return { condition: "Cloudy", icon: "cloudy" };
   if (code === 45 || code === 48) return { condition: "Fog", icon: "fog" };
-  if (code >= 51 && code <= 57)
-    return { condition: "Drizzle", icon: "drizzle" };
+  if (code >= 51 && code <= 57) return { condition: "Drizzle", icon: "drizzle" };
   if (code >= 61 && code <= 67) return { condition: "Rain", icon: "rain" };
   if (code >= 71 && code <= 77) return { condition: "Snow", icon: "snow" };
-  if (code >= 80 && code <= 82)
-    return { condition: "Rain Showers", icon: "showers" };
-  if (code === 85 || code === 86)
-    return { condition: "Snow Showers", icon: "snow-showers" };
-  if (code >= 95 && code <= 99)
-    return { condition: "Thunderstorm", icon: "thunderstorm" };
+  if (code >= 80 && code <= 82) return { condition: "Rain Showers", icon: "showers" };
+  if (code === 85 || code === 86) return { condition: "Snow Showers", icon: "snow-showers" };
+  if (code >= 95 && code <= 99) return { condition: "Thunderstorm", icon: "thunderstorm" };
   return { condition: "Unknown", icon: "unknown" };
 }
 
@@ -107,10 +98,7 @@ async function fetchWithTimeout(
   }
 }
 
-async function fetchWithRetry(
-  url: string,
-  fetchImpl: FetchLike = fetch,
-): Promise<Response | null> {
+async function fetchWithRetry(url: string, fetchImpl: FetchLike = fetch): Promise<Response | null> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -151,11 +139,7 @@ export async function resolveLocation(
   const isDefault = normalized === normalizePostalCode(DEFAULT_POSTAL_CODE);
 
   // Try full postal, then with country qualifier, then first 3 chars (FSA)
-  const queries = [
-    `${raw}, Canada`,
-    normalized,
-    `${normalized.slice(0, 3)}, Canada`,
-  ];
+  const queries = [`${raw}, Canada`, normalized, `${normalized.slice(0, 3)}, Canada`];
 
   for (const q of queries) {
     const url = `${GEOCODE_URL}?name=${encodeURIComponent(q)}&count=5&language=en&format=json&countryCode=CA`;
@@ -170,11 +154,7 @@ export async function resolveLocation(
     }
 
     const hit = body.results?.[0];
-    if (
-      hit &&
-      typeof hit.latitude === "number" &&
-      typeof hit.longitude === "number"
-    ) {
+    if (hit && typeof hit.latitude === "number" && typeof hit.longitude === "number") {
       const nameParts = [hit.name, hit.admin1].filter(Boolean);
       return {
         lat: hit.latitude,
@@ -208,10 +188,7 @@ interface ForecastApiResponse {
   };
 }
 
-function parseForecast(
-  body: ForecastApiResponse,
-  stale: boolean,
-): WeatherResult | null {
+function parseForecast(body: ForecastApiResponse, stale: boolean): WeatherResult | null {
   const cur = body.current;
   const daily = body.daily;
   if (!cur || !daily?.time?.length) return null;
@@ -244,25 +221,15 @@ function parseForecast(
 }
 
 /**
- * Fetch current + daily forecast for coordinates.
- * Cache: 15 min. On API failure returns stale cache if any; otherwise null.
+ * Fetch current + daily forecast for coordinates (uncached).
+ * Returns null on API failure. Prefer `getWeatherByPostal` at the API boundary
+ * so results live under `weather:{postalCode}`.
  */
 export async function getWeather(
   lat: number,
   lon: number,
   fetchImpl: FetchLike = fetch,
 ): Promise<WeatherResult | null> {
-  const key = cacheKey(lat, lon);
-  const cached = weatherCache.get(key);
-  const nowMs = Date.now();
-
-  if (cached && nowMs - cached.fetchedAt < CACHE_TTL_MS) {
-    return {
-      now: { ...cached.data.now, stale: false },
-      forecast: cached.data.forecast,
-    };
-  }
-
   const params = new URLSearchParams({
     latitude: String(lat),
     longitude: String(lon),
@@ -273,9 +240,7 @@ export async function getWeather(
       "weather_code",
       "wind_speed_10m",
     ].join(","),
-    daily: ["weather_code", "temperature_2m_max", "temperature_2m_min"].join(
-      ",",
-    ),
+    daily: ["weather_code", "temperature_2m_max", "temperature_2m_min"].join(","),
     timezone: "auto",
     forecast_days: "7",
     wind_speed_unit: "kmh",
@@ -288,37 +253,58 @@ export async function getWeather(
     try {
       const body = (await res.json()) as ForecastApiResponse;
       const parsed = parseForecast(body, false);
-      if (parsed) {
-        weatherCache.set(key, { data: parsed, fetchedAt: nowMs });
-        return parsed;
-      }
+      if (parsed) return parsed;
     } catch {
-      // fall through to stale
+      return null;
     }
-  }
-
-  // Degrade: return stale cache
-  if (cached) {
-    return {
-      now: { ...cached.data.now, stale: true },
-      forecast: cached.data.forecast,
-    };
   }
 
   return null;
 }
 
-/** Test helper: clear in-memory cache. */
-export function clearWeatherCache(): void {
-  weatherCache.clear();
+async function loadWeatherBundle(postalCode: string, fetchImpl: FetchLike): Promise<WeatherBundle> {
+  const raw = postalCode.trim() || DEFAULT_POSTAL_CODE;
+  let location = await resolveLocation(raw, fetchImpl);
+  if (!location && raw !== DEFAULT_POSTAL_CODE) {
+    location = await resolveLocation(DEFAULT_POSTAL_CODE, fetchImpl);
+  }
+  if (!location) {
+    throw new Error("location_unavailable");
+  }
+  const result = await getWeather(location.lat, location.lon, fetchImpl);
+  if (!result) {
+    throw new Error("weather_unavailable");
+  }
+  return { location, result };
 }
 
-/** Test helper: seed cache entry (for stale-path tests). */
-export function seedWeatherCache(
-  lat: number,
-  lon: number,
-  data: WeatherResult,
-  fetchedAt: number,
-): void {
-  weatherCache.set(cacheKey(lat, lon), { data, fetchedAt });
+/**
+ * Cached weather for a postal code (`weather:{postalCode}`, TTL 15 min).
+ * On API failure: returns stale cache when present, otherwise null.
+ */
+export async function getWeatherByPostal(
+  postalCode: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<CacheHit<WeatherBundle> | null> {
+  const raw = postalCode.trim() || DEFAULT_POSTAL_CODE;
+  try {
+    const hit = await getCached(
+      weatherCacheKey(raw),
+      () => loadWeatherBundle(raw, fetchImpl),
+      weatherTtlMs(),
+    );
+    return {
+      data: {
+        location: hit.data.location,
+        result: {
+          now: { ...hit.data.result.now, stale: hit.stale },
+          forecast: hit.data.result.forecast,
+        },
+      },
+      fetchedAt: hit.fetchedAt,
+      stale: hit.stale,
+    };
+  } catch {
+    return null;
+  }
 }

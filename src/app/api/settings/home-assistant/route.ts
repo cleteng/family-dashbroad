@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/require-auth";
-import {
-  getHAConfig,
-  saveHAConfig,
-  testSavedHAConnection,
-} from "@/lib/home-assistant";
+import { getHAConfig, saveHAConfig, testSavedHAConnection } from "@/lib/home-assistant";
 
 export const dynamic = "force-dynamic";
 

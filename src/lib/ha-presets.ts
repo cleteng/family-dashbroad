@@ -3,12 +3,7 @@
  * Keyword match is case-insensitive substring on entity_id + friendly_name.
  */
 
-export type HAPresetKey =
-  | "temperature"
-  | "humidity"
-  | "co2"
-  | "pm25"
-  | "air-quality";
+export type HAPresetKey = "temperature" | "humidity" | "co2" | "pm25" | "air-quality";
 
 export interface HAPreset {
   key: HAPresetKey;
@@ -71,16 +66,11 @@ export function getHAPreset(key: string): HAPreset | undefined {
  * Case-insensitive partial match: keyword appears in entity_id or friendly_name.
  * Returns matches sorted by friendlyName.
  */
-export function matchEntities(
-  preset: HAPreset,
-  entities: HAPresetEntity[],
-): HAPresetEntity[] {
+export function matchEntities(preset: HAPreset, entities: HAPresetEntity[]): HAPresetEntity[] {
   const keywords = preset.matchKeywords.map((k) => k.toLowerCase());
   const matched = entities.filter((e) => {
     const hay = `${e.entityId} ${e.friendlyName}`.toLowerCase();
     return keywords.some((kw) => hay.includes(kw));
   });
-  return matched
-    .slice()
-    .sort((a, b) => a.friendlyName.localeCompare(b.friendlyName, "zh"));
+  return matched.slice().sort((a, b) => a.friendlyName.localeCompare(b.friendlyName, "zh"));
 }

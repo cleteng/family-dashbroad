@@ -13,12 +13,7 @@ export function findPrimaryGoogleTasksUserId(): string | null {
   const row = db
     .select({ userId: integrations.userId })
     .from(integrations)
-    .where(
-      and(
-        eq(integrations.type, GOOGLE_INTEGRATION_TYPE),
-        eq(integrations.isActive, true),
-      ),
-    )
+    .where(and(eq(integrations.type, GOOGLE_INTEGRATION_TYPE), eq(integrations.isActive, true)))
     .get();
   return row?.userId ?? null;
 }

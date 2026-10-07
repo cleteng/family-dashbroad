@@ -4,11 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { mergeWeatherConfig } from "./config";
 import { WeatherView, type WeatherApiPayload } from "./WeatherView";
 
-export function WeatherRenderer({
-  config,
-}: {
-  config: Record<string, unknown>;
-}) {
+export function WeatherRenderer({ config }: { config: Record<string, unknown> }) {
   const cfg = useMemo(() => mergeWeatherConfig(config), [config]);
   const [data, setData] = useState<WeatherApiPayload | null>(null);
   const [error, setError] = useState(false);

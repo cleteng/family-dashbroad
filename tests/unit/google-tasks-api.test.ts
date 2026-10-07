@@ -1,9 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import {
-  GoogleTasksError,
-  googleTasksErrorHttpStatus,
-} from "@/lib/google-tasks";
+import { GoogleTasksError, googleTasksErrorHttpStatus } from "@/lib/google-tasks";
 
 vi.mock("@/lib/google-tasks-actor", () => ({
   resolveGoogleTasksActorUserId: vi.fn(),
@@ -16,45 +13,30 @@ vi.mock("@/lib/google-tasks", async (importOriginal) => {
     ...actual,
     listTaskLists: vi.fn(),
     listTasks: vi.fn(),
+    listTasksCached: vi.fn(),
     createTask: vi.fn(),
     completeTask: vi.fn(),
   };
 });
 
 import { resolveGoogleTasksActorUserId } from "@/lib/google-tasks-actor";
-import {
-  listTaskLists,
-  listTasks,
-  createTask,
-  completeTask,
-} from "@/lib/google-tasks";
+import { listTaskLists, listTasksCached, createTask, completeTask } from "@/lib/google-tasks";
 import { GET as getLists } from "@/app/api/google/tasks/lists/route";
-import {
-  GET as getTasks,
-  POST as postTask,
-} from "@/app/api/google/tasks/lists/[id]/route";
+import { GET as getTasks, POST as postTask } from "@/app/api/google/tasks/lists/[id]/route";
 import { POST as postComplete } from "@/app/api/google/tasks/lists/[id]/[taskId]/complete/route";
 
 const resolveActor = vi.mocked(resolveGoogleTasksActorUserId);
 const listTaskListsMock = vi.mocked(listTaskLists);
-const listTasksMock = vi.mocked(listTasks);
+const listTasksCachedMock = vi.mocked(listTasksCached);
 const createTaskMock = vi.mocked(createTask);
 const completeTaskMock = vi.mocked(completeTask);
 
 describe("googleTasksErrorHttpStatus", () => {
   it("maps codes to HTTP status", () => {
-    expect(
-      googleTasksErrorHttpStatus(new GoogleTasksError("NOT_CONNECTED", "x")),
-    ).toBe(503);
-    expect(
-      googleTasksErrorHttpStatus(new GoogleTasksError("UNAUTHORIZED", "x")),
-    ).toBe(401);
-    expect(
-      googleTasksErrorHttpStatus(new GoogleTasksError("INVALID_ARGUMENT", "x")),
-    ).toBe(400);
-    expect(
-      googleTasksErrorHttpStatus(new GoogleTasksError("API_ERROR", "x")),
-    ).toBe(502);
+    expect(googleTasksErrorHttpStatus(new GoogleTasksError("NOT_CONNECTED", "x"))).toBe(503);
+    expect(googleTasksErrorHttpStatus(new GoogleTasksError("UNAUTHORIZED", "x"))).toBe(401);
+    expect(googleTasksErrorHttpStatus(new GoogleTasksError("INVALID_ARGUMENT", "x"))).toBe(400);
+    expect(googleTasksErrorHttpStatus(new GoogleTasksError("API_ERROR", "x"))).toBe(502);
   });
 });
 
@@ -69,9 +51,7 @@ describe("GET /api/google/tasks/lists", () => {
     expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.error).toBe("NOT_CONNECTED");
-    expect(JSON.stringify(body)).not.toMatch(
-      /access_token|refresh_token|Bearer/,
-    );
+    expect(JSON.stringify(body)).not.toMatch(/access_token|refresh_token|Bearer/);
   });
 
   it("returns lists when actor present", async () => {
@@ -86,9 +66,7 @@ describe("GET /api/google/tasks/lists", () => {
 
   it("maps NOT_CONNECTED from provider to 503", async () => {
     resolveActor.mockResolvedValue("user-1");
-    listTaskListsMock.mockRejectedValue(
-      new GoogleTasksError("NOT_CONNECTED", "Google 未连接"),
-    );
+    listTaskListsMock.mockRejectedValue(new GoogleTasksError("NOT_CONNECTED", "Google 未连接"));
     const res = await getLists();
     expect(res.status).toBe(503);
     expect((await res.json()).error).toBe("NOT_CONNECTED");
@@ -108,28 +86,34 @@ describe("GET /api/google/tasks/lists/[id]", () => {
     expect(res.status).toBe(503);
   });
 
-  it("returns tasks", async () => {
+  it("returns tasks with fetchedAt", async () => {
     resolveActor.mockResolvedValue("user-1");
-    listTasksMock.mockResolvedValue([
-      {
-        id: "t1",
-        title: "Buy",
-        status: "needsAction",
-        updated: "2026-01-01T00:00:00.000Z",
-      },
-    ]);
+    const fetchedAt = Date.parse("2026-10-07T12:00:00.000Z");
+    listTasksCachedMock.mockResolvedValue({
+      data: [
+        {
+          id: "t1",
+          title: "Buy",
+          status: "needsAction",
+          updated: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+      fetchedAt,
+      stale: false,
+    });
     const res = await getTasks(new NextRequest("http://localhost/api"), {
       params: Promise.resolve({ id: "L1" }),
     });
     expect(res.status).toBe(200);
-    expect((await res.json()).tasks).toHaveLength(1);
+    const body = await res.json();
+    expect(body.tasks).toHaveLength(1);
+    expect(body.fetchedAt).toBe(new Date(fetchedAt).toISOString());
+    expect(body.stale).toBe(false);
   });
 
   it("maps UNAUTHORIZED to 401", async () => {
     resolveActor.mockResolvedValue("user-1");
-    listTasksMock.mockRejectedValue(
-      new GoogleTasksError("UNAUTHORIZED", "未授权"),
-    );
+    listTasksCachedMock.mockRejectedValue(new GoogleTasksError("UNAUTHORIZED", "未授权"));
     const res = await getTasks(new NextRequest("http://localhost/api"), {
       params: Promise.resolve({ id: "L1" }),
     });

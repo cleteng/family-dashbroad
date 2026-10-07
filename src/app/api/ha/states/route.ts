@@ -14,10 +14,7 @@ export async function GET() {
 
   const result = await listHASensorEntities();
   if (!result.ok) {
-    if (
-      result.reason === "not_configured" ||
-      result.reason === "unauthorized"
-    ) {
+    if (result.reason === "not_configured" || result.reason === "unauthorized") {
       return NextResponse.json(
         { error: "ha_unavailable", message: "HA 未连接", entities: [] },
         { status: 503 },

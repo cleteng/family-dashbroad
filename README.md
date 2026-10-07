@@ -2,7 +2,7 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-021 complete** (Todo widget).  
+**Current status: TASK-022 complete** (server data cache).  
 Next: further product tasks as planned.
 
 ## Tech Stack
@@ -20,6 +20,23 @@ npm install --legacy-peer-deps
 npm run db:migrate
 npm run dev
 ```
+
+## Data cache (TASK-022)
+
+External API reads share one server-side in-memory cache (`getCached`). Nothing is stored in the browser. OAuth tokens never go into cache keys or logs.
+
+| Key                    | Data                                                                           | Default TTL                         |
+| ---------------------- | ------------------------------------------------------------------------------ | ----------------------------------- |
+| `weather:{postalCode}` | Open-Meteo current + 7-day forecast (postal normalized, e.g. `weather:J4L3B3`) | 15 minutes (`CACHE_TTL_WEATHER_MS`) |
+| `gtasks:{listId}`      | Incomplete Google Tasks in that list                                           | 5 minutes (`CACHE_TTL_GTASKS_MS`)   |
+
+- Fresh hit → return cached value, skip the network.
+- TTL expired → refetch, replace the entry.
+- Fetcher throws and an old entry exists → return that entry with `stale: true`.
+- Fetcher throws and nothing is cached → error (weather API 503; Tasks API existing error mapping).
+- Every hit includes `fetchedAt` (epoch ms in the data layer; ISO string on HTTP JSON). Weather widgets still show “X 分钟前更新” from `now.updatedAt`.
+- Creating or completing a task invalidates `gtasks:{listId}`.
+- Home Assistant sensors are **not** cached (live values).
 
 ## 展示链接管理 (TASK-010)
 

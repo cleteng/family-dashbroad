@@ -3,12 +3,7 @@
  * Key derived from SESSION_SECRET via scrypt. AES-256-GCM.
  */
 
-import {
-  createCipheriv,
-  createDecipheriv,
-  randomBytes,
-  scryptSync,
-} from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
 
 const ALGO = "aes-256-gcm";
 const IV_LEN = 12;
@@ -19,9 +14,7 @@ const SALT = "family-dashboard-token-v1";
 function deriveKey(): Buffer {
   const secret = process.env.SESSION_SECRET;
   if (!secret || secret.length < 32) {
-    throw new Error(
-      "SESSION_SECRET must be set (>= 32 chars) for token encryption",
-    );
+    throw new Error("SESSION_SECRET must be set (>= 32 chars) for token encryption");
   }
   return scryptSync(secret, SALT, KEY_LEN);
 }
@@ -48,7 +41,5 @@ export function decryptSecret(payload: string): string {
   const data = buf.subarray(IV_LEN + TAG_LEN);
   const decipher = createDecipheriv(ALGO, key, iv);
   decipher.setAuthTag(tag);
-  return Buffer.concat([decipher.update(data), decipher.final()]).toString(
-    "utf8",
-  );
+  return Buffer.concat([decipher.update(data), decipher.final()]).toString("utf8");
 }

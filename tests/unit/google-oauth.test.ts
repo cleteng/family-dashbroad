@@ -44,9 +44,7 @@ describe("google-oauth pure helpers", () => {
   });
 
   it("buildGoogleAuthUrl includes tasks scope and state", async () => {
-    const { buildGoogleAuthUrl, GOOGLE_TASKS_SCOPE } = await import(
-      "@/lib/google-oauth-tokens"
-    );
+    const { buildGoogleAuthUrl, GOOGLE_TASKS_SCOPE } = await import("@/lib/google-oauth-tokens");
     const url = buildGoogleAuthUrl("csrf-state-abc");
     expect(url).toBeTruthy();
     const u = new URL(url!);
@@ -84,10 +82,9 @@ describe("google-oauth pure helpers", () => {
       const body = String((init as RequestInit)?.body ?? "");
       expect(body).toContain("grant_type=refresh_token");
       expect(body).toContain("refresh_token=rt-old");
-      return new Response(
-        JSON.stringify({ access_token: "access-new", expires_in: 1800 }),
-        { status: 200 },
-      );
+      return new Response(JSON.stringify({ access_token: "access-new", expires_in: 1800 }), {
+        status: 200,
+      });
     };
     const r = await refreshAccessToken("rt-old", fetchMock);
     expect(r.access_token).toBe("access-new");
@@ -95,9 +92,7 @@ describe("google-oauth pure helpers", () => {
   });
 
   it("isGoogleOAuthConfigured reflects env", async () => {
-    const { isGoogleOAuthConfigured } = await import(
-      "@/lib/google-oauth-tokens"
-    );
+    const { isGoogleOAuthConfigured } = await import("@/lib/google-oauth-tokens");
     expect(isGoogleOAuthConfigured()).toBe(true);
     delete process.env.GOOGLE_CLIENT_ID;
     // re-import won't clear module; function reads env live

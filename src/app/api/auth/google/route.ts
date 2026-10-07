@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { requireAuth } from "@/lib/require-auth";
 import { getSession } from "@/lib/session";
-import {
-  buildGoogleAuthUrl,
-  isGoogleOAuthConfigured,
-} from "@/lib/google-oauth";
+import { buildGoogleAuthUrl, isGoogleOAuthConfigured } from "@/lib/google-oauth";
 
 export const dynamic = "force-dynamic";
 
@@ -18,10 +15,7 @@ export async function GET() {
   if ("error" in auth) return auth.error;
 
   if (!isGoogleOAuthConfigured()) {
-    return NextResponse.json(
-      { error: "Google OAuth is not configured" },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: "Google OAuth is not configured" }, { status: 503 });
   }
 
   const state = randomBytes(24).toString("hex");
@@ -32,10 +26,7 @@ export async function GET() {
 
   const url = buildGoogleAuthUrl(state);
   if (!url) {
-    return NextResponse.json(
-      { error: "Google OAuth is not configured" },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: "Google OAuth is not configured" }, { status: 503 });
   }
 
   return NextResponse.redirect(url);

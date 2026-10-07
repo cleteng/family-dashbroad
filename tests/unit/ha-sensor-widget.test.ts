@@ -12,10 +12,7 @@ import {
   haSensorDefaultConfig,
 } from "@/widgets/ha-sensor/config";
 import { HASensorView } from "@/widgets/ha-sensor/HASensorView";
-import {
-  REGISTERED_WIDGET_TYPES,
-  getWidgetConfigEntry,
-} from "@/widgets/config-registry";
+import { REGISTERED_WIDGET_TYPES, getWidgetConfigEntry } from "@/widgets/config-registry";
 import {
   fetchHAEntityState,
   resetHARuntimeConfigForTests,
@@ -26,26 +23,18 @@ import {
 describe("ha-sensor registry", () => {
   it("registers ha-sensor type", () => {
     expect(REGISTERED_WIDGET_TYPES).toContain(HA_SENSOR_TYPE);
-    expect(getWidgetConfigEntry(HA_SENSOR_TYPE)?.metadata.name).toBe(
-      "HA 传感器",
-    );
+    expect(getWidgetConfigEntry(HA_SENSOR_TYPE)?.metadata.name).toBe("HA 传感器");
   });
 });
 
 describe("haSensorConfigSchema / merge", () => {
   it("accepts defaults", () => {
-    expect(haSensorConfigSchema.safeParse(haSensorDefaultConfig).success).toBe(
-      true,
-    );
+    expect(haSensorConfigSchema.safeParse(haSensorDefaultConfig).success).toBe(true);
   });
 
   it("clamps refreshInterval", () => {
-    expect(mergeHASensorConfig({ refreshInterval: 5 }).refreshInterval).toBe(
-      10,
-    );
-    expect(
-      mergeHASensorConfig({ refreshInterval: 99999 }).refreshInterval,
-    ).toBe(3600);
+    expect(mergeHASensorConfig({ refreshInterval: 5 }).refreshInterval).toBe(10);
+    expect(mergeHASensorConfig({ refreshInterval: 99999 }).refreshInterval).toBe(3600);
   });
 });
 
@@ -89,9 +78,7 @@ describe("HASensorView", () => {
   });
 
   it("shows 实体不存在", () => {
-    const html = renderToString(
-      React.createElement(HASensorView, { view: { kind: "not_found" } }),
-    );
+    const html = renderToString(React.createElement(HASensorView, { view: { kind: "not_found" } }));
     expect(html).toContain("实体不存在");
   });
 });
@@ -126,10 +113,7 @@ describe("fetchHAEntityState (mocked)", () => {
         }),
         { status: 200 },
       );
-    const result = await fetchHAEntityState(
-      "sensor.temperature_salon",
-      fetchMock,
-    );
+    const result = await fetchHAEntityState("sensor.temperature_salon", fetchMock);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.data.state).toBe("23.5");
@@ -139,16 +123,14 @@ describe("fetchHAEntityState (mocked)", () => {
   });
 
   it("401 → unauthorized (HA 未连接 path)", async () => {
-    const fetchMock: typeof fetch = async () =>
-      new Response("{}", { status: 401 });
+    const fetchMock: typeof fetch = async () => new Response("{}", { status: 401 });
     const result = await fetchHAEntityState("sensor.x", fetchMock);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe("unauthorized");
   });
 
   it("404 → not_found", async () => {
-    const fetchMock: typeof fetch = async () =>
-      new Response("{}", { status: 404 });
+    const fetchMock: typeof fetch = async () => new Response("{}", { status: 404 });
     const result = await fetchHAEntityState("sensor.missing", fetchMock);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe("not_found");

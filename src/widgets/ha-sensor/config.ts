@@ -28,10 +28,7 @@ export function mergeHASensorConfig(
 ): HASensorConfig {
   const raw = partial ?? {};
   let interval: number | undefined;
-  if (
-    typeof raw.refreshInterval === "number" &&
-    Number.isFinite(raw.refreshInterval)
-  ) {
+  if (typeof raw.refreshInterval === "number" && Number.isFinite(raw.refreshInterval)) {
     interval = Math.min(3600, Math.max(10, Math.round(raw.refreshInterval)));
   }
   const base = {
@@ -42,9 +39,7 @@ export function mergeHASensorConfig(
   const parsed = haSensorConfigSchema.parse(base);
   return {
     entityId:
-      typeof parsed.entityId === "string"
-        ? parsed.entityId.trim()
-        : haSensorDefaultConfig.entityId,
+      typeof parsed.entityId === "string" ? parsed.entityId.trim() : haSensorDefaultConfig.entityId,
     refreshInterval:
       typeof parsed.refreshInterval === "number"
         ? parsed.refreshInterval
@@ -53,10 +48,7 @@ export function mergeHASensorConfig(
 }
 
 /** Relative time for last_updated ISO strings. */
-export function formatHAUpdatedRelative(
-  updatedAt: string | null,
-  now = new Date(),
-): string {
+export function formatHAUpdatedRelative(updatedAt: string | null, now = new Date()): string {
   if (!updatedAt) return "";
   const t = new Date(updatedAt);
   if (Number.isNaN(t.getTime())) return "";

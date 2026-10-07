@@ -70,20 +70,15 @@ export function TodoRenderer({ config }: { config: Record<string, unknown> }) {
   const onComplete = useCallback(
     async (taskId: string) => {
       if (!cfg.listId) return;
-      setView((prev) =>
-        prev.kind === "ready" ? { ...prev, completingId: taskId } : prev,
-      );
+      setView((prev) => (prev.kind === "ready" ? { ...prev, completingId: taskId } : prev));
       try {
         const listEnc = encodeURIComponent(cfg.listId);
         const taskEnc = encodeURIComponent(taskId);
-        const res = await fetch(
-          `/api/google/tasks/lists/${listEnc}/${taskEnc}/complete`,
-          { method: "POST" },
-        );
+        const res = await fetch(`/api/google/tasks/lists/${listEnc}/${taskEnc}/complete`, {
+          method: "POST",
+        });
         if (!res.ok) {
-          setView((prev) =>
-            prev.kind === "ready" ? { ...prev, completingId: null } : prev,
-          );
+          setView((prev) => (prev.kind === "ready" ? { ...prev, completingId: null } : prev));
           return;
         }
         setView((prev) => {
@@ -96,9 +91,7 @@ export function TodoRenderer({ config }: { config: Record<string, unknown> }) {
           };
         });
       } catch {
-        setView((prev) =>
-          prev.kind === "ready" ? { ...prev, completingId: null } : prev,
-        );
+        setView((prev) => (prev.kind === "ready" ? { ...prev, completingId: null } : prev));
       }
     },
     [cfg.listId],

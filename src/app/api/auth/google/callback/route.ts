@@ -8,10 +8,7 @@ export const dynamic = "force-dynamic";
  * GET /api/auth/google/callback — exchange code, store tokens, redirect Admin.
  */
 export async function GET(req: NextRequest) {
-  const appUrl = (process.env.APP_URL ?? "http://localhost:3000").replace(
-    /\/+$/,
-    "",
-  );
+  const appUrl = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/+$/, "");
   const settingsPath = `${appUrl}/admin/settings/google`;
 
   const session = await getSession();
@@ -24,9 +21,7 @@ export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
   const error = sp.get("error");
   if (error) {
-    return NextResponse.redirect(
-      `${settingsPath}?error=${encodeURIComponent("授权被取消或失败")}`,
-    );
+    return NextResponse.redirect(`${settingsPath}?error=${encodeURIComponent("授权被取消或失败")}`);
   }
 
   const code = sp.get("code");
@@ -38,9 +33,7 @@ export async function GET(req: NextRequest) {
   await session.save();
 
   if (!code || !state || !expected || state !== expected) {
-    return NextResponse.redirect(
-      `${settingsPath}?error=${encodeURIComponent("无效的授权请求")}`,
-    );
+    return NextResponse.redirect(`${settingsPath}?error=${encodeURIComponent("无效的授权请求")}`);
   }
 
   try {
@@ -48,8 +41,6 @@ export async function GET(req: NextRequest) {
     saveGoogleTokens(session.userId, tokens);
     return NextResponse.redirect(`${settingsPath}?connected=1`);
   } catch {
-    return NextResponse.redirect(
-      `${settingsPath}?error=${encodeURIComponent("连接失败")}`,
-    );
+    return NextResponse.redirect(`${settingsPath}?error=${encodeURIComponent("连接失败")}`);
   }
 }

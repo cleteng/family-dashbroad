@@ -32,13 +32,7 @@ export type TodoViewActions = {
 /**
  * Presentational todo card — pure props for unit tests.
  */
-export function TodoView({
-  view,
-  actions,
-}: {
-  view: TodoViewState;
-  actions?: TodoViewActions;
-}) {
+export function TodoView({ view, actions }: { view: TodoViewState; actions?: TodoViewActions }) {
   if (view.kind === "loading") {
     return (
       <div
@@ -92,9 +86,7 @@ export function TodoView({
         data-testid="todo-widget"
         data-state="error"
       >
-        <div className="text-sm text-zinc-500">
-          {view.message || "同步失败"}
-        </div>
+        <div className="text-sm text-zinc-500">{view.message || "同步失败"}</div>
         {actions?.onRetry ? (
           <button
             type="button"
@@ -118,10 +110,7 @@ export function TodoView({
     >
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-zinc-500">待办</span>
-        <span
-          className="text-[10px] text-zinc-400"
-          data-testid="todo-sync-label"
-        >
+        <span className="text-[10px] text-zinc-400" data-testid="todo-sync-label">
           {formatSyncRelative(view.syncedAt)}
         </span>
       </div>
@@ -134,10 +123,7 @@ export function TodoView({
           暂无待办
         </div>
       ) : (
-        <ul
-          className="min-h-0 flex-1 space-y-1.5 overflow-y-auto"
-          data-testid="todo-list"
-        >
+        <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto" data-testid="todo-list">
           {view.tasks.map((t) => {
             const completing = view.completingId === t.id;
             return (
@@ -159,21 +145,14 @@ export function TodoView({
                   data-testid={`todo-check-${t.id}`}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm text-zinc-900">
-                    {t.title}
-                  </div>
+                  <div className="truncate text-sm text-zinc-900">{t.title}</div>
                   {t.due ? (
-                    <div
-                      className="text-[10px] text-zinc-400"
-                      data-testid={`todo-due-${t.id}`}
-                    >
+                    <div className="text-[10px] text-zinc-400" data-testid={`todo-due-${t.id}`}>
                       截止 {t.due.slice(0, 10)}
                     </div>
                   ) : null}
                   {t.notes ? (
-                    <div className="truncate text-[10px] text-zinc-400">
-                      {t.notes}
-                    </div>
+                    <div className="truncate text-[10px] text-zinc-400">{t.notes}</div>
                   ) : null}
                 </div>
               </li>

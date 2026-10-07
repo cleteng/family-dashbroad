@@ -14,12 +14,8 @@ import {
 
 describe("normalizeHAUrl", () => {
   it("strips trailing slashes", () => {
-    expect(normalizeHAUrl("http://ha.local:8123/")).toBe(
-      "http://ha.local:8123",
-    );
-    expect(normalizeHAUrl("  https://ha.example.com/// ")).toBe(
-      "https://ha.example.com",
-    );
+    expect(normalizeHAUrl("http://ha.local:8123/")).toBe("http://ha.local:8123");
+    expect(normalizeHAUrl("  https://ha.example.com/// ")).toBe("https://ha.example.com");
   });
 });
 
@@ -30,11 +26,7 @@ describe("testHAConnection", () => {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
-    const status = await testHAConnection(
-      "http://ha.local:8123",
-      "valid-token",
-      fetchMock,
-    );
+    const status = await testHAConnection("http://ha.local:8123", "valid-token", fetchMock);
     expect(status.connected).toBe(true);
     expect(status.version).toBe("2026.10.1");
     expect(status.error).toBeUndefined();
@@ -45,11 +37,7 @@ describe("testHAConnection", () => {
       new Response(JSON.stringify({ message: "Unauthorized" }), {
         status: 401,
       });
-    const status = await testHAConnection(
-      "http://ha.local:8123",
-      "bad-token",
-      fetchMock,
-    );
+    const status = await testHAConnection("http://ha.local:8123", "bad-token", fetchMock);
     expect(status.connected).toBe(false);
     expect(status.error).toBe("连接失败");
     // Must not echo token or HA body details
@@ -61,11 +49,7 @@ describe("testHAConnection", () => {
     const fetchMock: typeof fetch = async () => {
       throw new Error("fetch failed: ECONNREFUSED");
     };
-    const status = await testHAConnection(
-      "http://127.0.0.1:1",
-      "any-token",
-      fetchMock,
-    );
+    const status = await testHAConnection("http://127.0.0.1:1", "any-token", fetchMock);
     expect(status.connected).toBe(false);
     expect(status.error).toBe("连接失败");
     expect(JSON.stringify(status)).not.toContain("ECONNREFUSED");

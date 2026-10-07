@@ -2,17 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { mergeHASensorConfig } from "./config";
-import {
-  HASensorView,
-  type HASensorPayload,
-  type HASensorViewState,
-} from "./HASensorView";
+import { HASensorView, type HASensorPayload, type HASensorViewState } from "./HASensorView";
 
-export function HASensorRenderer({
-  config,
-}: {
-  config: Record<string, unknown>;
-}) {
+export function HASensorRenderer({ config }: { config: Record<string, unknown> }) {
   const cfg = useMemo(() => mergeHASensorConfig(config), [config]);
   const [view, setView] = useState<HASensorViewState>(() =>
     cfg.entityId ? { kind: "loading" } : { kind: "no_entity" },

@@ -49,12 +49,7 @@ function loadIntegrationRow(userId: string) {
   return db
     .select()
     .from(integrations)
-    .where(
-      and(
-        eq(integrations.userId, userId),
-        eq(integrations.type, GOOGLE_INTEGRATION_TYPE),
-      ),
-    )
+    .where(and(eq(integrations.userId, userId), eq(integrations.type, GOOGLE_INTEGRATION_TYPE)))
     .get();
 }
 
@@ -66,12 +61,8 @@ function decryptCreds(encrypted: string | null): StoredCredentials | null {
     if (typeof parsed.refresh_token !== "string") return null;
     return {
       refresh_token: parsed.refresh_token,
-      access_token:
-        typeof parsed.access_token === "string"
-          ? parsed.access_token
-          : undefined,
-      expires_at:
-        typeof parsed.expires_at === "number" ? parsed.expires_at : undefined,
+      access_token: typeof parsed.access_token === "string" ? parsed.access_token : undefined,
+      expires_at: typeof parsed.expires_at === "number" ? parsed.expires_at : undefined,
     };
   } catch {
     return null;
@@ -142,9 +133,7 @@ export type GoogleConnectionStatus = {
   configured: boolean;
 };
 
-export function getGoogleConnectionStatus(
-  userId: string,
-): GoogleConnectionStatus {
+export function getGoogleConnectionStatus(userId: string): GoogleConnectionStatus {
   const configured = isGoogleOAuthConfigured();
   const row = loadIntegrationRow(userId);
   if (!row || !row.isActive) {
@@ -180,11 +169,7 @@ export async function getValidAccessToken(
   const creds = decryptCreds(row.credentials);
   if (!creds?.refresh_token) return null;
 
-  if (
-    creds.access_token &&
-    creds.expires_at &&
-    creds.expires_at > Date.now() + 60_000
-  ) {
+  if (creds.access_token && creds.expires_at && creds.expires_at > Date.now() + 60_000) {
     accessCache.set(userId, {
       accessToken: creds.access_token,
       expiresAt: creds.expires_at,
@@ -227,10 +212,9 @@ export async function revokeGoogleConnection(
 
   if (creds?.refresh_token) {
     try {
-      await fetchImpl(
-        `${GOOGLE_REVOKE_URL}?token=${encodeURIComponent(creds.refresh_token)}`,
-        { method: "POST" },
-      );
+      await fetchImpl(`${GOOGLE_REVOKE_URL}?token=${encodeURIComponent(creds.refresh_token)}`, {
+        method: "POST",
+      });
     } catch {
       // best-effort
     }

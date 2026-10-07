@@ -1,12 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   completeTask,
   createTask,
   GoogleTasksError,
   listTaskLists,
   listTasks,
+  listTasksCached,
   setGoogleTasksTokenResolverForTests,
 } from "@/lib/google-tasks";
+import { clearCache, peekCache, gtasksCacheKey } from "@/lib/cache";
 
 const USER = "user-test-1";
 
@@ -19,11 +21,13 @@ function jsonResponse(data: unknown, status = 200): Response {
 
 describe("google-tasks provider", () => {
   beforeEach(() => {
+    clearCache();
     setGoogleTasksTokenResolverForTests(async () => "access-token-test");
   });
 
   afterEach(() => {
     setGoogleTasksTokenResolverForTests(null);
+    clearCache();
   });
 
   describe("listTaskLists", () => {
@@ -73,16 +77,14 @@ describe("google-tasks provider", () => {
     });
 
     it("401 → UNAUTHORIZED", async () => {
-      const fetchMock: typeof fetch = async () =>
-        new Response("{}", { status: 401 });
+      const fetchMock: typeof fetch = async () => new Response("{}", { status: 401 });
       await expect(listTaskLists(USER, fetchMock)).rejects.toMatchObject({
         code: "UNAUTHORIZED",
       });
     });
 
     it("500 → API_ERROR", async () => {
-      const fetchMock: typeof fetch = async () =>
-        new Response("{}", { status: 500 });
+      const fetchMock: typeof fetch = async () => new Response("{}", { status: 500 });
       await expect(listTaskLists(USER, fetchMock)).rejects.toMatchObject({
         code: "API_ERROR",
       });
@@ -174,6 +176,63 @@ describe("google-tasks provider", () => {
       const tasks = await listTasks(USER, "L", fetchMock);
       expect(tasks.map((t) => t.id)).toEqual(["t1", "t2"]);
     });
+
+    it("caches by gtasks:{listId} and skips fetcher on hit", async () => {
+      const fetchMock = vi.fn(async () =>
+        jsonResponse({
+          items: [
+            {
+              id: "t1",
+              title: "Open",
+              status: "needsAction",
+              updated: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        }),
+      );
+      const first = await listTasksCached(USER, "LIST1", fetchMock);
+      expect(first.stale).toBe(false);
+      expect(first.data).toHaveLength(1);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+
+      const second = await listTasksCached(USER, "LIST1", fetchMock);
+      expect(second.data).toEqual(first.data);
+      expect(second.fetchedAt).toBe(first.fetchedAt);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(peekCache(gtasksCacheKey("LIST1"))).toBeDefined();
+    });
+
+    it("does not mix different list ids", async () => {
+      const fetchMock = vi.fn(async (url) => {
+        const u = String(url);
+        if (u.includes("/lists/A/")) {
+          return jsonResponse({
+            items: [
+              {
+                id: "a1",
+                title: "A",
+                status: "needsAction",
+                updated: "2026-01-01T00:00:00.000Z",
+              },
+            ],
+          });
+        }
+        return jsonResponse({
+          items: [
+            {
+              id: "b1",
+              title: "B",
+              status: "needsAction",
+              updated: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        });
+      });
+      const a = await listTasks(USER, "A", fetchMock);
+      const b = await listTasks(USER, "B", fetchMock);
+      expect(a[0].id).toBe("a1");
+      expect(b[0].id).toBe("b1");
+    });
   });
 
   describe("completeTask", () => {
@@ -187,19 +246,36 @@ describe("google-tasks provider", () => {
         expect(headers.get("Authorization")).toBe("Bearer access-token-test");
         return jsonResponse({ id: "T1", status: "completed" });
       };
-      await expect(
-        completeTask(USER, "L1", "T1", fetchMock),
-      ).resolves.toBeUndefined();
+      await expect(completeTask(USER, "L1", "T1", fetchMock)).resolves.toBeUndefined();
     });
 
     it("404 → API_ERROR", async () => {
-      const fetchMock: typeof fetch = async () =>
-        new Response("{}", { status: 404 });
-      await expect(
-        completeTask(USER, "L1", "missing", fetchMock),
-      ).rejects.toMatchObject({
+      const fetchMock: typeof fetch = async () => new Response("{}", { status: 404 });
+      await expect(completeTask(USER, "L1", "missing", fetchMock)).rejects.toMatchObject({
         code: "API_ERROR",
       });
+    });
+
+    it("invalidates gtasks:{listId} after success", async () => {
+      const fetchMock = vi.fn(async (url, init) => {
+        if ((init as RequestInit | undefined)?.method === "PATCH") {
+          return jsonResponse({ id: "t1", status: "completed" });
+        }
+        return jsonResponse({
+          items: [
+            {
+              id: "t1",
+              title: "Open",
+              status: "needsAction",
+              updated: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        });
+      });
+      await listTasks(USER, "L1", fetchMock);
+      expect(peekCache(gtasksCacheKey("L1"))).toBeDefined();
+      await completeTask(USER, "L1", "t1", fetchMock);
+      expect(peekCache(gtasksCacheKey("L1"))).toBeUndefined();
     });
   });
 
@@ -242,11 +318,8 @@ describe("google-tasks provider", () => {
     });
 
     it("401 → UNAUTHORIZED", async () => {
-      const fetchMock: typeof fetch = async () =>
-        new Response("{}", { status: 401 });
-      await expect(
-        createTask(USER, "L1", "x", undefined, fetchMock),
-      ).rejects.toMatchObject({
+      const fetchMock: typeof fetch = async () => new Response("{}", { status: 401 });
+      await expect(createTask(USER, "L1", "x", undefined, fetchMock)).rejects.toMatchObject({
         code: "UNAUTHORIZED",
       });
     });
@@ -255,14 +328,12 @@ describe("google-tasks provider", () => {
   describe("auth", () => {
     it("NOT_CONNECTED when no token", async () => {
       setGoogleTasksTokenResolverForTests(async () => null);
-      await expect(
-        listTaskLists(USER, async () => jsonResponse({})),
-      ).rejects.toMatchObject({
+      await expect(listTaskLists(USER, async () => jsonResponse({}))).rejects.toMatchObject({
         code: "NOT_CONNECTED",
       });
-      await expect(
-        listTaskLists(USER, async () => jsonResponse({})),
-      ).rejects.toBeInstanceOf(GoogleTasksError);
+      await expect(listTaskLists(USER, async () => jsonResponse({}))).rejects.toBeInstanceOf(
+        GoogleTasksError,
+      );
     });
   });
 });

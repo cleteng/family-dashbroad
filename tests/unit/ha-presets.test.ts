@@ -1,10 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  HA_PRESETS,
-  getHAPreset,
-  matchEntities,
-  type HAPresetEntity,
-} from "@/lib/ha-presets";
+import { HA_PRESETS, getHAPreset, matchEntities, type HAPresetEntity } from "@/lib/ha-presets";
 
 const sampleEntities: HAPresetEntity[] = [
   {
@@ -41,13 +36,7 @@ describe("HA_PRESETS", () => {
   it("has exactly 5 presets with unit and icon", () => {
     expect(HA_PRESETS).toHaveLength(5);
     const keys = HA_PRESETS.map((p) => p.key);
-    expect(keys).toEqual([
-      "temperature",
-      "humidity",
-      "co2",
-      "pm25",
-      "air-quality",
-    ]);
+    expect(keys).toEqual(["temperature", "humidity", "co2", "pm25", "air-quality"]);
     for (const p of HA_PRESETS) {
       expect(p.icon.length).toBeGreaterThan(0);
       expect(p.name.length).toBeGreaterThan(0);
@@ -73,31 +62,23 @@ describe("matchEntities", () => {
 
   it("partial match on friendly_name (中文)", () => {
     const preset = getHAPreset("temperature")!;
-    const hits = matchEntities(preset, [
-      { entityId: "sensor.x", friendlyName: "客厅温度" },
-    ]);
+    const hits = matchEntities(preset, [{ entityId: "sensor.x", friendlyName: "客厅温度" }]);
     expect(hits).toHaveLength(1);
     expect(hits[0].entityId).toBe("sensor.x");
   });
 
   it("matches humidity / co2 / pm25 / air-quality", () => {
+    expect(matchEntities(getHAPreset("humidity")!, sampleEntities).map((e) => e.entityId)).toEqual([
+      "sensor.living_humidity",
+    ]);
+    expect(matchEntities(getHAPreset("co2")!, sampleEntities).map((e) => e.entityId)).toEqual([
+      "sensor.co2_office",
+    ]);
+    expect(matchEntities(getHAPreset("pm25")!, sampleEntities).map((e) => e.entityId)).toEqual([
+      "sensor.pm25_bedroom",
+    ]);
     expect(
-      matchEntities(getHAPreset("humidity")!, sampleEntities).map(
-        (e) => e.entityId,
-      ),
-    ).toEqual(["sensor.living_humidity"]);
-    expect(
-      matchEntities(getHAPreset("co2")!, sampleEntities).map((e) => e.entityId),
-    ).toEqual(["sensor.co2_office"]);
-    expect(
-      matchEntities(getHAPreset("pm25")!, sampleEntities).map(
-        (e) => e.entityId,
-      ),
-    ).toEqual(["sensor.pm25_bedroom"]);
-    expect(
-      matchEntities(getHAPreset("air-quality")!, sampleEntities).map(
-        (e) => e.entityId,
-      ),
+      matchEntities(getHAPreset("air-quality")!, sampleEntities).map((e) => e.entityId),
     ).toEqual(["sensor.aqi_outdoor"]);
   });
 

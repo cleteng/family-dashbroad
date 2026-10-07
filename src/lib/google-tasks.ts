@@ -1,7 +1,17 @@
 /**
- * Google Tasks data layer (TASK-020).
+ * Google Tasks data layer (TASK-020) + TASK-022 cache.
  * Reuses TASK-019 getValidAccessToken — does not implement OAuth.
+ * List reads are cached server-side as `gtasks:{listId}` (see `@/lib/cache`).
+ * OAuth tokens never enter cache keys or logs.
  */
+
+import {
+  type CacheHit,
+  getCached,
+  gtasksCacheKey,
+  gtasksTtlMs,
+  invalidateCache,
+} from "@/lib/cache";
 
 const TASKS_API = "https://tasks.googleapis.com/tasks/v1";
 const REQUEST_TIMEOUT_MS = 15_000;
@@ -22,10 +32,7 @@ export interface TaskItem {
 }
 
 export type GoogleTasksErrorCode =
-  | "NOT_CONNECTED"
-  | "UNAUTHORIZED"
-  | "API_ERROR"
-  | "INVALID_ARGUMENT";
+  "NOT_CONNECTED" | "UNAUTHORIZED" | "API_ERROR" | "INVALID_ARGUMENT";
 
 export class GoogleTasksError extends Error {
   readonly code: GoogleTasksErrorCode;
@@ -39,40 +46,26 @@ export class GoogleTasksError extends Error {
 
 type FetchLike = typeof fetch;
 
-type TokenResolver = (
-  userId: string,
-  fetchImpl?: FetchLike,
-) => Promise<string | null>;
+type TokenResolver = (userId: string, fetchImpl?: FetchLike) => Promise<string | null>;
 
 /** Injectable for tests; default lazily uses TASK-019 getValidAccessToken. */
 let tokenResolver: TokenResolver | null = null;
 
-async function defaultTokenResolver(
-  userId: string,
-  fetchImpl?: FetchLike,
-): Promise<string | null> {
+async function defaultTokenResolver(userId: string, fetchImpl?: FetchLike): Promise<string | null> {
   const { getValidAccessToken } = await import("@/lib/google-oauth");
   return getValidAccessToken(userId, fetchImpl);
 }
 
-export function setGoogleTasksTokenResolverForTests(
-  resolver: TokenResolver | null,
-): void {
+export function setGoogleTasksTokenResolverForTests(resolver: TokenResolver | null): void {
   tokenResolver = resolver;
 }
 
-function resolveToken(
-  userId: string,
-  fetchImpl: FetchLike,
-): Promise<string | null> {
+function resolveToken(userId: string, fetchImpl: FetchLike): Promise<string | null> {
   const r = tokenResolver ?? defaultTokenResolver;
   return r(userId, fetchImpl);
 }
 
-async function requireAccessToken(
-  userId: string,
-  fetchImpl: FetchLike,
-): Promise<string> {
+async function requireAccessToken(userId: string, fetchImpl: FetchLike): Promise<string> {
   const token = await resolveToken(userId, fetchImpl);
   if (!token) {
     throw new GoogleTasksError("NOT_CONNECTED", "Google 未连接");
@@ -141,8 +134,7 @@ async function fetchAllPages<T>(
     }
 
     items.push(...extract(body));
-    const next =
-      typeof body.nextPageToken === "string" ? body.nextPageToken : undefined;
+    const next = typeof body.nextPageToken === "string" ? body.nextPageToken : undefined;
     if (!next) break;
     pageToken = next;
   }
@@ -166,10 +158,7 @@ function mapTaskItem(raw: Record<string, unknown>): TaskItem | null {
     id: raw.id,
     title: typeof raw.title === "string" ? raw.title : "",
     status,
-    updated:
-      typeof raw.updated === "string"
-        ? raw.updated
-        : new Date(0).toISOString(),
+    updated: typeof raw.updated === "string" ? raw.updated : new Date(0).toISOString(),
   };
   if (typeof raw.due === "string" && raw.due) item.due = raw.due;
   if (typeof raw.notes === "string" && raw.notes) item.notes = raw.notes;
@@ -202,18 +191,12 @@ export async function listTaskLists(
   return rows;
 }
 
-/**
- * List incomplete tasks in a list (pagination + filter needsAction).
- */
-export async function listTasks(
+async function fetchIncompleteTasks(
   userId: string,
   listId: string,
-  fetchImpl: FetchLike = fetch,
+  fetchImpl: FetchLike,
 ): Promise<TaskItem[]> {
-  if (!listId.trim()) {
-    throw new GoogleTasksError("INVALID_ARGUMENT", "listId 无效");
-  }
-  const encoded = encodeURIComponent(listId.trim());
+  const encoded = encodeURIComponent(listId);
   const rows = await fetchAllPages(
     userId,
     `/lists/${encoded}/tasks?maxResults=100&showCompleted=true&showHidden=false`,
@@ -231,6 +214,36 @@ export async function listTasks(
     fetchImpl,
   );
   return rows.filter((t) => t.status === "needsAction");
+}
+
+/**
+ * Cached list of incomplete tasks (`gtasks:{listId}`, TTL 5 min).
+ */
+export async function listTasksCached(
+  userId: string,
+  listId: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<CacheHit<TaskItem[]>> {
+  if (!listId.trim()) {
+    throw new GoogleTasksError("INVALID_ARGUMENT", "listId 无效");
+  }
+  return getCached(
+    gtasksCacheKey(listId.trim()),
+    () => fetchIncompleteTasks(userId, listId.trim(), fetchImpl),
+    gtasksTtlMs(),
+  );
+}
+
+/**
+ * List incomplete tasks in a list (pagination + filter needsAction).
+ */
+export async function listTasks(
+  userId: string,
+  listId: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<TaskItem[]> {
+  const hit = await listTasksCached(userId, listId, fetchImpl);
+  return hit.data;
 }
 
 /**
@@ -256,6 +269,7 @@ export async function completeTask(
     fetchImpl,
   );
   if (!res.ok) mapHttpError(res.status);
+  invalidateCache(gtasksCacheKey(listId.trim()));
 }
 
 /**
@@ -299,6 +313,7 @@ export async function createTask(
   if (!mapped) {
     throw new GoogleTasksError("API_ERROR", "无法解析新建任务");
   }
+  invalidateCache(gtasksCacheKey(listId.trim()));
   return mapped;
 }
 

@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { resolveGoogleTasksActorUserId } from "@/lib/google-tasks-actor";
-import {
-  googleTasksErrorHttpStatus,
-  isGoogleTasksError,
-  listTaskLists,
-} from "@/lib/google-tasks";
+import { googleTasksErrorHttpStatus, isGoogleTasksError, listTaskLists } from "@/lib/google-tasks";
 
 export const dynamic = "force-dynamic";
 

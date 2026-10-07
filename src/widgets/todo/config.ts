@@ -22,15 +22,10 @@ export type TodoConfig = {
   refreshInterval: number;
 };
 
-export function mergeTodoConfig(
-  partial: Record<string, unknown> | null | undefined,
-): TodoConfig {
+export function mergeTodoConfig(partial: Record<string, unknown> | null | undefined): TodoConfig {
   const raw = partial ?? {};
   let interval: number | undefined;
-  if (
-    typeof raw.refreshInterval === "number" &&
-    Number.isFinite(raw.refreshInterval)
-  ) {
+  if (typeof raw.refreshInterval === "number" && Number.isFinite(raw.refreshInterval)) {
     interval = Math.min(3600, Math.max(30, Math.round(raw.refreshInterval)));
   }
   return {
@@ -40,10 +35,7 @@ export function mergeTodoConfig(
 }
 
 /** Relative sync label. */
-export function formatSyncRelative(
-  syncedAt: number | null,
-  now = Date.now(),
-): string {
+export function formatSyncRelative(syncedAt: number | null, now = Date.now()): string {
   if (syncedAt == null) return "";
   const mins = Math.floor(Math.max(0, now - syncedAt) / 60_000);
   if (mins < 1) return "刚刚同步";
