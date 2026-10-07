@@ -12,12 +12,14 @@ import { calendarDefinition } from "./calendar/definition";
 import { chineseAlmanacDefinition } from "./chinese-almanac/definition";
 import { weatherDefinition } from "./weather/definition";
 import { haSensorDefinition } from "./ha-sensor/definition";
+import { todoDefinition } from "./todo/definition";
 
 registerWidget(clockDefinition);
 registerWidget(calendarDefinition);
 registerWidget(chineseAlmanacDefinition);
 registerWidget(weatherDefinition);
 registerWidget(haSensorDefinition);
+registerWidget(todoDefinition);
 
 export {
   registerWidget,
@@ -32,6 +34,7 @@ export { calendarDefinition } from "./calendar/definition";
 export { chineseAlmanacDefinition } from "./chinese-almanac/definition";
 export { weatherDefinition } from "./weather/definition";
 export { haSensorDefinition } from "./ha-sensor/definition";
+export { todoDefinition } from "./todo/definition";
 export {
   REGISTERED_WIDGET_TYPES,
   listWidgetConfigEntries,
