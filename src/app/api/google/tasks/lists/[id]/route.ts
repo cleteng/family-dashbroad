@@ -27,7 +27,7 @@ function decodeId(raw: string): string {
 }
 
 /**
- * GET /api/google/tasks/lists/[id] → { tasks, fetchedAt, stale }
+ * GET /api/google/tasks/lists/[id] → { tasks } incomplete only
  */
 export async function GET(_req: NextRequest, ctx: RouteCtx) {
   const userId = await resolveGoogleTasksActorUserId();
@@ -73,7 +73,10 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
 export async function POST(req: NextRequest, ctx: RouteCtx) {
   const userId = await resolveGoogleTasksActorUserId();
   if (!userId) {
-    return NextResponse.json({ error: "NOT_CONNECTED", message: "Google 未连接" }, { status: 503 });
+    return NextResponse.json(
+      { error: "NOT_CONNECTED", message: "Google 未连接" },
+      { status: 503 },
+    );
   }
 
   const listId = decodeId((await ctx.params).id).trim();
@@ -96,7 +99,10 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
 
   const parsed = createBodySchema.safeParse(json);
   if (!parsed.success) {
-    return NextResponse.json({ error: "INVALID_ARGUMENT", message: "title 必填" }, { status: 400 });
+    return NextResponse.json(
+      { error: "INVALID_ARGUMENT", message: "title 必填" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -112,6 +118,9 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
         { status: googleTasksErrorHttpStatus(err) },
       );
     }
-    return NextResponse.json({ error: "API_ERROR", message: "请求失败" }, { status: 502 });
+    return NextResponse.json(
+      { error: "API_ERROR", message: "请求失败" },
+      { status: 502 },
+    );
   }
 }
