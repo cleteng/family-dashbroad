@@ -2,8 +2,8 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-020 complete** (Google Tasks data layer).  
-Next: Todo widget (TASK-021).
+**Current status: TASK-021 complete** (Todo widget).  
+Next: further product tasks as planned.
 
 ## Tech Stack
 
