@@ -116,6 +116,28 @@ describe("google-tasks provider", () => {
       expect(tasks[0].status).toBe("needsAction");
     });
 
+    it("ignores unknown status (not treated as needsAction)", async () => {
+      const fetchMock: typeof fetch = async () =>
+        jsonResponse({
+          items: [
+            {
+              id: "t-unknown",
+              title: "Weird",
+              status: "somethingElse",
+              updated: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "t-ok",
+              title: "Open",
+              status: "needsAction",
+              updated: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        });
+      const tasks = await listTasks(USER, "LIST1", fetchMock);
+      expect(tasks.map((x) => x.id)).toEqual(["t-ok"]);
+    });
+
     it("empty list → []", async () => {
       const fetchMock: typeof fetch = async () => jsonResponse({});
       await expect(listTasks(USER, "LIST1", fetchMock)).resolves.toEqual([]);
