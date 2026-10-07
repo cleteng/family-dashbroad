@@ -243,11 +243,14 @@ function parseForecast(
  * Fetch current + daily forecast for coordinates.
  * Cache: 15 min. On API failure returns stale cache if any; otherwise null.
  */
+/** Weather payload plus cache metadata for API routes. */
+export type WeatherResultWithMeta = WeatherResult & { fetchedAt: number };
+
 export async function getWeather(
   lat: number,
   lon: number,
   fetchImpl: FetchLike = fetch,
-): Promise<WeatherResult | null> {
+): Promise<WeatherResultWithMeta | null> {
   const key = weatherCacheKey(lat, lon);
 
   try {
@@ -292,10 +295,23 @@ export async function getWeather(
     return {
       now: { ...result.data.now, stale: result.stale },
       forecast: result.data.forecast,
+      fetchedAt: result.fetchedAt,
     };
   } catch {
     return null;
   }
+}
+
+/**
+ * Resolve postal → coords → weather (with cache meta).
+ */
+export async function getWeatherByPostal(
+  postalCode: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<WeatherResultWithMeta | null> {
+  const loc = await resolveLocation(postalCode, fetchImpl);
+  if (!loc) return null;
+  return getWeather(loc.lat, loc.lon, fetchImpl);
 }
 
 /** Test helper: clear in-memory cache. */
