@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/require-auth";
+import { resolveGoogleTasksActorUserId } from "@/lib/google-tasks-actor";
 import {
   completeTask,
   googleTasksErrorHttpStatus,
@@ -10,28 +10,30 @@ export const dynamic = "force-dynamic";
 
 type RouteCtx = { params: Promise<{ id: string; taskId: string }> };
 
+function decodeId(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
 /**
  * POST /api/google/tasks/lists/[id]/[taskId]/complete
  */
 export async function POST(_req: NextRequest, ctx: RouteCtx) {
-  const auth = await requireAuth();
-  if ("error" in auth) return auth.error;
+  const userId = await resolveGoogleTasksActorUserId();
+  if (!userId) {
+    return NextResponse.json(
+      { error: "NOT_CONNECTED", message: "Google 未连接" },
+      { status: 503 },
+    );
+  }
 
   const params = await ctx.params;
-  let listId = params.id;
-  let taskId = params.taskId;
-  try {
-    listId = decodeURIComponent(params.id);
-  } catch {
-    /* keep */
-  }
-  try {
-    taskId = decodeURIComponent(params.taskId);
-  } catch {
-    /* keep */
-  }
-
-  if (!listId.trim() || !taskId.trim()) {
+  const listId = decodeId(params.id).trim();
+  const taskId = decodeId(params.taskId).trim();
+  if (!listId || !taskId) {
     return NextResponse.json(
       { error: "INVALID_ARGUMENT", message: "listId 或 taskId 无效" },
       { status: 400 },
@@ -39,7 +41,7 @@ export async function POST(_req: NextRequest, ctx: RouteCtx) {
   }
 
   try {
-    await completeTask(auth.session.userId, listId, taskId);
+    await completeTask(userId, listId, taskId);
     return NextResponse.json({ success: true });
   } catch (err) {
     if (isGoogleTasksError(err)) {
