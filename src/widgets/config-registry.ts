@@ -34,6 +34,12 @@ import {
   haSensorDefaultConfig,
   haSensorMetadata,
 } from "./ha-sensor/config";
+import {
+  TODO_TYPE,
+  todoConfigSchema,
+  todoDefaultConfig,
+  todoMetadata,
+} from "./todo/config";
 import type { z } from "zod";
 
 export type WidgetConfigEntry = {
@@ -73,6 +79,12 @@ export const widgetConfigRegistry: Record<string, WidgetConfigEntry> = {
     metadata: { ...haSensorMetadata },
     defaultConfig: { ...haSensorDefaultConfig },
     configSchema: haSensorConfigSchema,
+  },
+  [TODO_TYPE]: {
+    type: TODO_TYPE,
+    metadata: { ...todoMetadata },
+    defaultConfig: { ...todoDefaultConfig },
+    configSchema: todoConfigSchema,
   },
 };
 
