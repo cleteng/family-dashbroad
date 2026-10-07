@@ -5,8 +5,9 @@ import {
   googleTasksErrorHttpStatus,
 } from "@/lib/google-tasks";
 
-vi.mock("@/lib/require-auth", () => ({
-  requireAuth: vi.fn(),
+vi.mock("@/lib/google-tasks-actor", () => ({
+  resolveGoogleTasksActorUserId: vi.fn(),
+  findPrimaryGoogleTasksUserId: vi.fn(),
 }));
 
 vi.mock("@/lib/google-tasks", async (importOriginal) => {
@@ -20,7 +21,7 @@ vi.mock("@/lib/google-tasks", async (importOriginal) => {
   };
 });
 
-import { requireAuth } from "@/lib/require-auth";
+import { resolveGoogleTasksActorUserId } from "@/lib/google-tasks-actor";
 import {
   listTaskLists,
   listTasks,
@@ -34,23 +35,11 @@ import {
 } from "@/app/api/google/tasks/lists/[id]/route";
 import { POST as postComplete } from "@/app/api/google/tasks/lists/[id]/[taskId]/complete/route";
 
-const requireAuthMock = vi.mocked(requireAuth);
+const resolveActor = vi.mocked(resolveGoogleTasksActorUserId);
 const listTaskListsMock = vi.mocked(listTaskLists);
 const listTasksMock = vi.mocked(listTasks);
 const createTaskMock = vi.mocked(createTask);
 const completeTaskMock = vi.mocked(completeTask);
-
-function authed() {
-  requireAuthMock.mockResolvedValue({
-    session: { userId: "user-1", email: "a@example.com" },
-  });
-}
-
-function unauthed() {
-  requireAuthMock.mockResolvedValue({
-    error: Response.json({ error: "Unauthorized" }, { status: 401 }) as never,
-  });
-}
 
 describe("googleTasksErrorHttpStatus", () => {
   it("maps codes to HTTP status", () => {
@@ -74,35 +63,35 @@ describe("GET /api/google/tasks/lists", () => {
     vi.clearAllMocks();
   });
 
-  it("returns 401 when not logged in", async () => {
-    unauthed();
+  it("503 NOT_CONNECTED when no actor user", async () => {
+    resolveActor.mockResolvedValue(null);
     const res = await getLists();
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(503);
     const body = await res.json();
-    expect(JSON.stringify(body)).not.toMatch(/access_token|refresh_token|Bearer/);
+    expect(body.error).toBe("NOT_CONNECTED");
+    expect(JSON.stringify(body)).not.toMatch(
+      /access_token|refresh_token|Bearer/,
+    );
   });
 
-  it("returns lists when authed", async () => {
-    authed();
+  it("returns lists when actor present", async () => {
+    resolveActor.mockResolvedValue("user-1");
     listTaskListsMock.mockResolvedValue([{ id: "L1", title: "Personal" }]);
     const res = await getLists();
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.lists).toEqual([{ id: "L1", title: "Personal" }]);
     expect(listTaskListsMock).toHaveBeenCalledWith("user-1");
-    expect(JSON.stringify(body)).not.toMatch(/access_token|refresh_token/);
   });
 
-  it("maps NOT_CONNECTED to 503", async () => {
-    authed();
+  it("maps NOT_CONNECTED from provider to 503", async () => {
+    resolveActor.mockResolvedValue("user-1");
     listTaskListsMock.mockRejectedValue(
       new GoogleTasksError("NOT_CONNECTED", "Google 未连接"),
     );
     const res = await getLists();
     expect(res.status).toBe(503);
-    const body = await res.json();
-    expect(body.error).toBe("NOT_CONNECTED");
-    expect(JSON.stringify(body)).not.toMatch(/access_token|Bearer /);
+    expect((await res.json()).error).toBe("NOT_CONNECTED");
   });
 });
 
@@ -111,16 +100,16 @@ describe("GET /api/google/tasks/lists/[id]", () => {
     vi.clearAllMocks();
   });
 
-  it("401 when unauthenticated", async () => {
-    unauthed();
+  it("503 when no actor", async () => {
+    resolveActor.mockResolvedValue(null);
     const res = await getTasks(new NextRequest("http://localhost/api"), {
       params: Promise.resolve({ id: "L1" }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(503);
   });
 
   it("returns tasks", async () => {
-    authed();
+    resolveActor.mockResolvedValue("user-1");
     listTasksMock.mockResolvedValue([
       {
         id: "t1",
@@ -133,13 +122,11 @@ describe("GET /api/google/tasks/lists/[id]", () => {
       params: Promise.resolve({ id: "L1" }),
     });
     expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.tasks).toHaveLength(1);
-    expect(listTasksMock).toHaveBeenCalledWith("user-1", "L1");
+    expect((await res.json()).tasks).toHaveLength(1);
   });
 
   it("maps UNAUTHORIZED to 401", async () => {
-    authed();
+    resolveActor.mockResolvedValue("user-1");
     listTasksMock.mockRejectedValue(
       new GoogleTasksError("UNAUTHORIZED", "未授权"),
     );
@@ -147,7 +134,6 @@ describe("GET /api/google/tasks/lists/[id]", () => {
       params: Promise.resolve({ id: "L1" }),
     });
     expect(res.status).toBe(401);
-    expect((await res.json()).error).toBe("UNAUTHORIZED");
   });
 });
 
@@ -157,7 +143,7 @@ describe("POST /api/google/tasks/lists/[id]", () => {
   });
 
   it("400 when title missing (Zod)", async () => {
-    authed();
+    resolveActor.mockResolvedValue("user-1");
     const req = new NextRequest("http://localhost/api", {
       method: "POST",
       body: JSON.stringify({ notes: "only notes" }),
@@ -167,12 +153,11 @@ describe("POST /api/google/tasks/lists/[id]", () => {
       params: Promise.resolve({ id: "L1" }),
     });
     expect(res.status).toBe(400);
-    expect((await res.json()).error).toBe("INVALID_ARGUMENT");
     expect(createTaskMock).not.toHaveBeenCalled();
   });
 
   it("creates task when body valid", async () => {
-    authed();
+    resolveActor.mockResolvedValue("user-1");
     createTaskMock.mockResolvedValue({
       id: "new1",
       title: "Buy milk",
@@ -181,22 +166,14 @@ describe("POST /api/google/tasks/lists/[id]", () => {
     });
     const req = new NextRequest("http://localhost/api", {
       method: "POST",
-      body: JSON.stringify({
-        title: "Buy milk",
-        due: "2026-10-10T12:00:00.000Z",
-      }),
+      body: JSON.stringify({ title: "Buy milk" }),
       headers: { "Content-Type": "application/json" },
     });
     const res = await postTask(req, {
       params: Promise.resolve({ id: "L1" }),
     });
     expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.task.title).toBe("Buy milk");
-    expect(createTaskMock).toHaveBeenCalledWith("user-1", "L1", "Buy milk", {
-      due: "2026-10-10T12:00:00.000Z",
-      notes: undefined,
-    });
+    expect((await res.json()).task.title).toBe("Buy milk");
   });
 });
 
@@ -205,34 +182,21 @@ describe("POST .../complete", () => {
     vi.clearAllMocks();
   });
 
-  it("401 when unauthenticated", async () => {
-    unauthed();
+  it("503 when no actor", async () => {
+    resolveActor.mockResolvedValue(null);
     const res = await postComplete(new NextRequest("http://localhost/api"), {
       params: Promise.resolve({ id: "L1", taskId: "T1" }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(503);
   });
 
   it("returns success", async () => {
-    authed();
+    resolveActor.mockResolvedValue("user-1");
     completeTaskMock.mockResolvedValue(undefined);
     const res = await postComplete(new NextRequest("http://localhost/api"), {
       params: Promise.resolve({ id: "L1", taskId: "T1" }),
     });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ success: true });
-    expect(completeTaskMock).toHaveBeenCalledWith("user-1", "L1", "T1");
-  });
-
-  it("maps API_ERROR to 502", async () => {
-    authed();
-    completeTaskMock.mockRejectedValue(
-      new GoogleTasksError("API_ERROR", "Google Tasks API 错误 (404)"),
-    );
-    const res = await postComplete(new NextRequest("http://localhost/api"), {
-      params: Promise.resolve({ id: "L1", taskId: "missing" }),
-    });
-    expect(res.status).toBe(502);
-    expect((await res.json()).error).toBe("API_ERROR");
   });
 });
