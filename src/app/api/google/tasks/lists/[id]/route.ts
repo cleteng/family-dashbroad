@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAuth } from "@/lib/require-auth";
+import { resolveGoogleTasksActorUserId } from "@/lib/google-tasks-actor";
 import {
   createTask,
   googleTasksErrorHttpStatus,
@@ -18,22 +18,28 @@ const createBodySchema = z.object({
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
+function decodeId(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
 /**
- * GET /api/google/tasks/lists/[id] → incomplete TaskItem[]
+ * GET /api/google/tasks/lists/[id] → { tasks } incomplete only
  */
 export async function GET(_req: NextRequest, ctx: RouteCtx) {
-  const auth = await requireAuth();
-  if ("error" in auth) return auth.error;
-
-  const { id: rawId } = await ctx.params;
-  let listId = rawId;
-  try {
-    listId = decodeURIComponent(rawId);
-  } catch {
-    listId = rawId;
+  const userId = await resolveGoogleTasksActorUserId();
+  if (!userId) {
+    return NextResponse.json(
+      { error: "NOT_CONNECTED", message: "Google 未连接", tasks: [] },
+      { status: 503 },
+    );
   }
 
-  if (!listId.trim()) {
+  const listId = decodeId((await ctx.params).id).trim();
+  if (!listId) {
     return NextResponse.json(
       { error: "INVALID_ARGUMENT", message: "listId 无效" },
       { status: 400 },
@@ -41,38 +47,36 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
   }
 
   try {
-    const tasks = await listTasks(auth.session.userId, listId);
+    const tasks = await listTasks(userId, listId);
     return NextResponse.json({ tasks });
   } catch (err) {
     if (isGoogleTasksError(err)) {
       return NextResponse.json(
-        { error: err.code, message: err.message },
+        { error: err.code, message: err.message, tasks: [] },
         { status: googleTasksErrorHttpStatus(err) },
       );
     }
     return NextResponse.json(
-      { error: "API_ERROR", message: "请求失败" },
+      { error: "API_ERROR", message: "请求失败", tasks: [] },
       { status: 502 },
     );
   }
 }
 
 /**
- * POST /api/google/tasks/lists/[id] → create TaskItem
+ * POST /api/google/tasks/lists/[id] → { task }
  */
 export async function POST(req: NextRequest, ctx: RouteCtx) {
-  const auth = await requireAuth();
-  if ("error" in auth) return auth.error;
-
-  const { id: rawId } = await ctx.params;
-  let listId = rawId;
-  try {
-    listId = decodeURIComponent(rawId);
-  } catch {
-    listId = rawId;
+  const userId = await resolveGoogleTasksActorUserId();
+  if (!userId) {
+    return NextResponse.json(
+      { error: "NOT_CONNECTED", message: "Google 未连接" },
+      { status: 503 },
+    );
   }
 
-  if (!listId.trim()) {
+  const listId = decodeId((await ctx.params).id).trim();
+  if (!listId) {
     return NextResponse.json(
       { error: "INVALID_ARGUMENT", message: "listId 无效" },
       { status: 400 },
@@ -98,12 +102,10 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
   }
 
   try {
-    const task = await createTask(
-      auth.session.userId,
-      listId,
-      parsed.data.title,
-      { due: parsed.data.due, notes: parsed.data.notes },
-    );
+    const task = await createTask(userId, listId, parsed.data.title, {
+      due: parsed.data.due,
+      notes: parsed.data.notes,
+    });
     return NextResponse.json({ task });
   } catch (err) {
     if (isGoogleTasksError(err)) {
