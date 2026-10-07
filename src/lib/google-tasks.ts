@@ -9,6 +9,7 @@ import {
   invalidateCache,
   gtasksListsCacheKey,
   gtasksTasksCacheKey,
+  type CacheResult,
 } from "@/lib/data-cache";
 
 const TASKS_API = "https://tasks.googleapis.com/tasks/v1";
@@ -215,19 +216,19 @@ export async function listTaskLists(
 }
 
 /**
- * List incomplete tasks in a list (pagination + filter needsAction).
+ * Fetch incomplete tasks with cache metadata (TASK-022).
  */
-export async function listTasks(
+export async function listTasksCached(
   userId: string,
   listId: string,
   fetchImpl: FetchLike = fetch,
-): Promise<TaskItem[]> {
+): Promise<CacheResult<TaskItem[]>> {
   if (!listId.trim()) {
     throw new GoogleTasksError("INVALID_ARGUMENT", "listId 无效");
   }
   const trimmed = listId.trim();
   const key = gtasksTasksCacheKey(userId, trimmed);
-  const result = await getCached(
+  return getCached(
     key,
     async () => {
       const encoded = encodeURIComponent(trimmed);
@@ -251,7 +252,18 @@ export async function listTasks(
     },
     GTASKS_CACHE_TTL_MS,
   );
-  return result.data;
+}
+
+/**
+ * List incomplete tasks in a list (pagination + filter needsAction).
+ */
+export async function listTasks(
+  userId: string,
+  listId: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<TaskItem[]> {
+  const hit = await listTasksCached(userId, listId, fetchImpl);
+  return hit.data;
 }
 
 /**
