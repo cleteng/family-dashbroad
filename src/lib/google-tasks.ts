@@ -157,14 +157,19 @@ function mapTaskList(raw: Record<string, unknown>): TaskList | null {
 
 function mapTaskItem(raw: Record<string, unknown>): TaskItem | null {
   if (typeof raw.id !== "string") return null;
-  const status =
-    raw.status === "completed" ? "completed" : ("needsAction" as const);
+  // Only accept known Google Tasks statuses; ignore unknown values.
+  if (raw.status !== "needsAction" && raw.status !== "completed") {
+    return null;
+  }
+  const status = raw.status;
   const item: TaskItem = {
     id: raw.id,
     title: typeof raw.title === "string" ? raw.title : "",
     status,
     updated:
-      typeof raw.updated === "string" ? raw.updated : new Date(0).toISOString(),
+      typeof raw.updated === "string"
+        ? raw.updated
+        : new Date(0).toISOString(),
   };
   if (typeof raw.due === "string" && raw.due) item.due = raw.due;
   if (typeof raw.notes === "string" && raw.notes) item.notes = raw.notes;
