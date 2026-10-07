@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/require-auth";
+import { resolveGoogleTasksActorUserId } from "@/lib/google-tasks-actor";
 import {
   googleTasksErrorHttpStatus,
   isGoogleTasksError,
@@ -9,24 +9,30 @@ import {
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/google/tasks/lists → TaskList[]
+ * GET /api/google/tasks/lists → { lists }
+ * Admin session or primary Google user (display board).
  */
 export async function GET() {
-  const auth = await requireAuth();
-  if ("error" in auth) return auth.error;
+  const userId = await resolveGoogleTasksActorUserId();
+  if (!userId) {
+    return NextResponse.json(
+      { error: "NOT_CONNECTED", message: "Google 未连接", lists: [] },
+      { status: 503 },
+    );
+  }
 
   try {
-    const lists = await listTaskLists(auth.session.userId);
+    const lists = await listTaskLists(userId);
     return NextResponse.json({ lists });
   } catch (err) {
     if (isGoogleTasksError(err)) {
       return NextResponse.json(
-        { error: err.code, message: err.message },
+        { error: err.code, message: err.message, lists: [] },
         { status: googleTasksErrorHttpStatus(err) },
       );
     }
     return NextResponse.json(
-      { error: "API_ERROR", message: "请求失败" },
+      { error: "API_ERROR", message: "请求失败", lists: [] },
       { status: 502 },
     );
   }
