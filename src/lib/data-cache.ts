@@ -3,12 +3,15 @@
  *
  * Key conventions (no tokens in keys or logs):
  *   weather:{lat},{lon}     — Open-Meteo forecast (TTL 15m)
+ *   geocode:{postal}         — postal → lat/lon (TTL 24h)
  *   gtasks:lists:{userId}   — Google task lists (TTL 5m)
  *   gtasks:tasks:{userId}:{listId} — incomplete tasks (TTL 5m)
  */
 
 export const WEATHER_CACHE_TTL_MS = 15 * 60 * 1000;
 export const GTASKS_CACHE_TTL_MS = 5 * 60 * 1000;
+/** Postal/place geocoding (stable). */
+export const GEOCODE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 export type CacheResult<T> = {
   data: T;
@@ -99,6 +102,11 @@ export function peekDataCache(key: string): { fetchedAt: number } | null {
 
 export function weatherCacheKey(lat: number, lon: number): string {
   return `weather:${lat.toFixed(4)},${lon.toFixed(4)}`;
+}
+
+/** Normalized postal/place string → geocode cache key. */
+export function geocodeCacheKey(normalizedPostal: string): string {
+  return `geocode:${normalizedPostal}`;
 }
 
 export function gtasksListsCacheKey(userId: string): string {
