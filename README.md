@@ -2,7 +2,7 @@
 
 把闲置平板变成家里的常亮信息中心（天气、日历、待办、Home Assistant 等），数据自托管。
 
-**使用说明（推荐先看）：** [docs/USER_GUIDE.md](docs/USER_GUIDE.md)  
+**使用说明（推荐先看）：** [docs/USER_GUIDE.md](docs/USER_GUIDE.md) · [兼容性](docs/COMPATIBILITY.md)  
 **文档目录：** [docs/README.md](docs/README.md)
 
 ## Tech Stack
