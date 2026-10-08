@@ -2,7 +2,7 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-023 complete** (widget error isolation).  
+**Current status: TASK-024 complete** (display long-running runtime).  
 Next: further product tasks as planned.
 
 ## Tech Stack
