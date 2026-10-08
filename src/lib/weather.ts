@@ -5,10 +5,12 @@
 
 import {
   WEATHER_CACHE_TTL_MS,
+  GEOCODE_CACHE_TTL_MS,
   getCached,
   clearDataCache,
   seedDataCache,
   weatherCacheKey,
+  geocodeCacheKey,
 } from "@/lib/data-cache";
 
 const GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search";
@@ -132,18 +134,13 @@ interface GeocodeApiResult {
 }
 
 /**
- * Resolve a Canadian postal code (or place name) to lat/lon + display name.
- * Uses Open-Meteo Geocoding API. Returns null on failure.
- * For the default postal J4L 3B3, falls back to known Longueuil coords if API has no hit.
+ * Uncached geocode (Open-Meteo). Used only inside resolveLocation via getCached.
  */
-export async function resolveLocation(
-  postalCode: string,
-  fetchImpl: FetchLike = fetch,
-): Promise<ResolvedLocation | null> {
-  const raw = postalCode.trim();
-  if (!raw) return null;
-
-  const normalized = normalizePostalCode(raw);
+async function resolveLocationUncached(
+  raw: string,
+  normalized: string,
+  fetchImpl: FetchLike,
+): Promise<ResolvedLocation> {
   const isDefault = normalized === normalizePostalCode(DEFAULT_POSTAL_CODE);
 
   // Try full postal, then with country qualifier, then first 3 chars (FSA)
@@ -184,7 +181,35 @@ export async function resolveLocation(
     return { ...DEFAULT_LOCATION };
   }
 
-  return null;
+  // Throw so getCached does not store a "null" success; callers still get null.
+  throw new Error("geocode_not_found");
+}
+
+/**
+ * Resolve a Canadian postal code (or place name) to lat/lon + display name.
+ * Successful results cached 24h (TASK-022) — same postal does not re-hit Geocoding API.
+ * For the default postal J4L 3B3, falls back to known Longueuil coords if API has no hit.
+ */
+export async function resolveLocation(
+  postalCode: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<ResolvedLocation | null> {
+  const raw = postalCode.trim();
+  if (!raw) return null;
+
+  const normalized = normalizePostalCode(raw);
+  const key = geocodeCacheKey(normalized);
+
+  try {
+    const hit = await getCached(
+      key,
+      () => resolveLocationUncached(raw, normalized, fetchImpl),
+      GEOCODE_CACHE_TTL_MS,
+    );
+    return hit.data;
+  } catch {
+    return null;
+  }
 }
 
 interface ForecastApiResponse {
