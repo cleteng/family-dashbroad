@@ -62,7 +62,7 @@ export function DisplayBoard({
 
   return (
     <div
-      className="min-h-screen bg-black p-2 text-white"
+      className="min-h-screen overflow-x-hidden bg-black p-2 text-white"
       data-testid="display-board"
       data-breakpoint={bp}
       data-online={online ? "1" : "0"}
