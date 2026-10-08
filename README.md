@@ -2,8 +2,8 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-025 complete** (Docker production deploy).  
-Next: reverse proxy / Caddy (TASK-026).
+**Current status: TASK-026 complete** (VPS + Caddy HTTPS deploy docs).  
+Next: further product tasks as planned.
 
 ## Tech Stack
 
@@ -100,4 +100,5 @@ Stale fallback when upstream fails and an older entry exists.
 
 ## Docker
 
-See [docs/DOCKER.md](docs/DOCKER.md) for production Compose + SQLite volume.
+See [docs/DOCKER.md](docs/DOCKER.md) for Compose + SQLite volume.
+See [docs/VPS.md](docs/VPS.md) for VPS + Caddy HTTPS, backup, and upgrade.
