@@ -1,12 +1,30 @@
+# family-dashboard production compose (TASK-025)
+# 1) cp .env.example .env  and set SESSION_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
+# 2) docker compose up -d --build
+#
+# Compose reads `.env` in this directory for ${VAR} substitution.
+# SQLite + HA config: volume app-data → /data
+
 services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:3000"
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=file:/data/app.db
-      - APP_URL=http://localhost:3000
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-file:/data/app.db}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      WEATHER_DEFAULT_POSTAL: ${WEATHER_DEFAULT_POSTAL:-J4L 3B3}
+      HA_URL: ${HA_URL:-}
+      HA_TOKEN: ${HA_TOKEN:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
     volumes:
       - app-data:/data
     restart: unless-stopped
