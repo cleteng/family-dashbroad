@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getWidgetDefinition } from "@/widgets/registry";
+import { WidgetErrorBoundary } from "@/components/WidgetErrorBoundary";
 import "@/widgets"; // register all built-in widgets
 import type { Breakpoint } from "@/lib/layouts";
 import type { DisplayLayoutEntry, DisplayWidget } from "@/lib/display-tokens";
@@ -94,7 +95,9 @@ export function DisplayBoard({
               }}
             >
               {Renderer ? (
-                <Renderer config={w.config ?? {}} />
+                <WidgetErrorBoundary widgetType={w.type}>
+                  <Renderer config={w.config ?? {}} />
+                </WidgetErrorBoundary>
               ) : (
                 <div
                   className="flex h-full min-h-[80px] items-center justify-center p-4 text-sm text-zinc-500"
