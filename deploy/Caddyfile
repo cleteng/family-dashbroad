@@ -1,0 +1,20 @@
+# Family Dashboard reverse proxy (TASK-026)
+# Set DOMAIN in .env (e.g. dash.example.com). Caddy obtains Let's Encrypt certs automatically.
+#
+# DNS: A/AAAA record for DOMAIN → VPS public IP
+
+{$DOMAIN:localhost} {
+	encode gzip
+	reverse_proxy app:3000
+
+	# Long-lived Display boards on old Safari — avoid aggressive caching of HTML
+	header {
+		# Remove server fingerprint noise
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
