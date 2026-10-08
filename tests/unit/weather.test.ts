@@ -199,3 +199,39 @@ describe("getWeatherByPostal", () => {
     await expect(getWeatherByPostal("", fetchMock)).resolves.toBeNull();
   });
 });
+
+describe("resolveLocation geocode cache", () => {
+  beforeEach(() => {
+    clearWeatherCache();
+  });
+
+  it("does not re-hit Geocoding API for same postal within TTL", async () => {
+    let calls = 0;
+    const fetchMock: typeof fetch = async (url) => {
+      const u = String(url);
+      if (u.includes("geocoding-api.open-meteo.com")) {
+        calls += 1;
+        return new Response(
+          JSON.stringify({
+            results: [
+              {
+                name: "Testville",
+                latitude: 45.1,
+                longitude: -73.2,
+                admin1: "Quebec",
+              },
+            ],
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response("{}", { status: 500 });
+    };
+
+    const a = await resolveLocation("H2X 1Y4", fetchMock);
+    const b = await resolveLocation("H2X 1Y4", fetchMock);
+    expect(a?.lat).toBe(45.1);
+    expect(b?.lat).toBe(45.1);
+    expect(calls).toBe(1);
+  });
+});
