@@ -6,7 +6,9 @@ import {
   invalidateCache,
   peekDataCache,
   weatherCacheKey,
+  geocodeCacheKey,
   gtasksTasksCacheKey,
+  GEOCODE_CACHE_TTL_MS,
 } from "@/lib/data-cache";
 
 describe("data-cache getCached", () => {
@@ -73,6 +75,8 @@ describe("data-cache getCached", () => {
 
   it("key helpers follow conventions", () => {
     expect(weatherCacheKey(45.5316, -73.5181)).toMatch(/^weather:/);
+    expect(geocodeCacheKey("J4L3B3")).toBe("geocode:J4L3B3");
     expect(gtasksTasksCacheKey("u1", "L1")).toBe("gtasks:tasks:u1:L1");
+    expect(GEOCODE_CACHE_TTL_MS).toBe(24 * 60 * 60 * 1000);
   });
 });
