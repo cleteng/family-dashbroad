@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useDisplayOnline } from "@/hooks/useDisplayRuntime";
 import { getWidgetDefinition } from "@/widgets/registry";
 import { WidgetErrorBoundary } from "@/components/WidgetErrorBoundary";
 import "@/widgets"; // register all built-in widgets
@@ -21,6 +22,7 @@ export function DisplayBoard({
   layouts: DisplayLayoutEntry[];
 }) {
   const [bp, setBp] = useState<Breakpoint>("desktop");
+  const online = useDisplayOnline();
 
   useEffect(() => {
     function update() {
@@ -63,7 +65,17 @@ export function DisplayBoard({
       className="min-h-screen bg-black p-2 text-white"
       data-testid="display-board"
       data-breakpoint={bp}
+      data-online={online ? "1" : "0"}
     >
+      {!online ? (
+        <div
+          className="mb-2 rounded border border-amber-800/60 bg-amber-950/50 px-3 py-1.5 text-center text-xs text-amber-200"
+          data-testid="display-offline-banner"
+          role="status"
+        >
+          网络已断开 · 显示上次数据 · 恢复后将自动同步
+        </div>
+      ) : null}
       <div
         className="relative mx-auto w-full max-w-[1600px]"
         style={{
