@@ -6,12 +6,19 @@
  *   geocode:{postal}         — postal → lat/lon (TTL 24h)
  *   gtasks:lists:{userId}   — Google task lists (TTL 5m)
  *   gtasks:tasks:{userId}:{listId} — incomplete tasks (TTL 5m)
+ *
+ * Concurrent getCached for the same key shares one in-flight Promise
+ * so a stampede does not multiply upstream API calls.
+ * Store is capped (MAX_CACHE_ENTRIES); oldest keys are dropped on insert.
  */
 
 export const WEATHER_CACHE_TTL_MS = 15 * 60 * 1000;
 export const GTASKS_CACHE_TTL_MS = 5 * 60 * 1000;
 /** Postal/place geocoding (stable). */
 export const GEOCODE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+/** Soft cap on cache entries to bound memory on long-running processes. */
+export const MAX_CACHE_ENTRIES = 5000;
 
 export type CacheResult<T> = {
   data: T;
@@ -27,11 +34,23 @@ type Entry<T> = {
 };
 
 const store = new Map<string, Entry<unknown>>();
+const inFlight = new Map<string, Promise<CacheResult<unknown>>>();
+
+function setEntry(key: string, entry: Entry<unknown>): void {
+  // Refresh insertion order for eviction (Map iterates in insertion order)
+  if (store.has(key)) store.delete(key);
+  store.set(key, entry);
+  while (store.size > MAX_CACHE_ENTRIES) {
+    const oldest = store.keys().next().value;
+    if (oldest === undefined) break;
+    store.delete(oldest);
+  }
+}
 
 /**
  * getCached(key, fetcher, ttlMs)
  * - Fresh hit → return without calling fetcher
- * - Miss / expired → call fetcher, store, return
+ * - Miss / expired → call fetcher (coalesced per key), store, return
  * - Fetcher throws + old entry → return stale data
  * - Fetcher throws + no entry → rethrow
  */
@@ -51,21 +70,31 @@ export async function getCached<T>(
     };
   }
 
-  try {
-    const data = await fetcher();
-    const fetchedAt = Date.now();
-    store.set(key, { data, fetchedAt });
-    return { data, fetchedAt, stale: false };
-  } catch (err) {
-    if (existing) {
-      return {
-        data: existing.data,
-        fetchedAt: existing.fetchedAt,
-        stale: true,
-      };
+  const pending = inFlight.get(key) as Promise<CacheResult<T>> | undefined;
+  if (pending) return pending;
+
+  const p: Promise<CacheResult<T>> = (async () => {
+    try {
+      const data = await fetcher();
+      const fetchedAt = Date.now();
+      setEntry(key, { data, fetchedAt });
+      return { data, fetchedAt, stale: false };
+    } catch (err) {
+      if (existing) {
+        return {
+          data: existing.data,
+          fetchedAt: existing.fetchedAt,
+          stale: true,
+        };
+      }
+      throw err;
+    } finally {
+      inFlight.delete(key);
     }
-    throw err;
-  }
+  })();
+
+  inFlight.set(key, p as Promise<CacheResult<unknown>>);
+  return p;
 }
 
 /** Remove one key (e.g. after mutation). */
@@ -73,7 +102,10 @@ export function invalidateCache(key: string): void {
   store.delete(key);
 }
 
-/** Remove all keys with a prefix (e.g. `gtasks:tasks:user:`). */
+/**
+ * Remove all keys with a prefix (e.g. `gtasks:tasks:user:`).
+ * Key count is expected to stay small (hundreds); full scan is fine.
+ */
 export function invalidateCachePrefix(prefix: string): void {
   for (const k of store.keys()) {
     if (k.startsWith(prefix)) store.delete(k);
@@ -83,6 +115,7 @@ export function invalidateCachePrefix(prefix: string): void {
 /** Test helper. */
 export function clearDataCache(): void {
   store.clear();
+  inFlight.clear();
 }
 
 /** Test helper: seed an entry. */
@@ -91,13 +124,18 @@ export function seedDataCache<T>(
   data: T,
   fetchedAt: number,
 ): void {
-  store.set(key, { data, fetchedAt });
+  setEntry(key, { data, fetchedAt });
 }
 
 /** Test helper: read raw entry age. */
 export function peekDataCache(key: string): { fetchedAt: number } | null {
   const e = store.get(key);
   return e ? { fetchedAt: e.fetchedAt } : null;
+}
+
+/** Test helper: current store size. */
+export function dataCacheSize(): number {
+  return store.size;
 }
 
 export function weatherCacheKey(lat: number, lon: number): string {
