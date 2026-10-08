@@ -66,3 +66,7 @@ docker compose down -v         # 警告：-v 会删除 volume，数据清空
 - 镜像基于 `output: "standalone"`，入口为 `node server.js`
 - 不包含独立数据库容器（SQLite 文件卷）
 - 不包含 Caddy / TLS（TASK-026）
+
+## VPS + HTTPS
+
+See [VPS.md](./VPS.md) for Caddy, domain, backup, and upgrade.
