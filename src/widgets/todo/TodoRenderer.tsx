@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useDisplayDataRefresh } from "@/hooks/useDisplayRuntime";
 import { mergeTodoConfig } from "./config";
 import { TodoView, type TodoTask, type TodoViewState } from "./TodoView";
 
@@ -37,7 +38,9 @@ export function TodoRenderer({ config }: { config: Record<string, unknown> }) {
         return;
       }
       if (!res.ok) {
-        setView({ kind: "error", message: "同步失败" });
+        setView((prev) =>
+          prev.kind === "ready" ? prev : { kind: "error", message: "同步失败" },
+        );
         return;
       }
       const json = (await res.json()) as { tasks?: TodoTask[] };
@@ -48,37 +51,32 @@ export function TodoRenderer({ config }: { config: Record<string, unknown> }) {
         completingId: null,
       });
     } catch {
-      setView({ kind: "error", message: "同步失败" });
+      setView((prev) =>
+        prev.kind === "ready" ? prev : { kind: "error", message: "同步失败" },
+      );
     }
   }, [cfg.listId]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const run = () => {
-      if (!cancelled) void load();
-    };
-    const start = setTimeout(run, 0);
-    const ms = Math.max(30, cfg.refreshInterval) * 1000;
-    const id = setInterval(run, ms);
-    return () => {
-      cancelled = true;
-      clearTimeout(start);
-      clearInterval(id);
-    };
-  }, [load, cfg.refreshInterval]);
+  const intervalMs = Math.max(30, cfg.refreshInterval) * 1000;
+  useDisplayDataRefresh(load, intervalMs);
 
   const onComplete = useCallback(
     async (taskId: string) => {
       if (!cfg.listId) return;
-      setView((prev) => (prev.kind === "ready" ? { ...prev, completingId: taskId } : prev));
+      setView((prev) =>
+        prev.kind === "ready" ? { ...prev, completingId: taskId } : prev,
+      );
       try {
         const listEnc = encodeURIComponent(cfg.listId);
         const taskEnc = encodeURIComponent(taskId);
-        const res = await fetch(`/api/google/tasks/lists/${listEnc}/${taskEnc}/complete`, {
-          method: "POST",
-        });
+        const res = await fetch(
+          `/api/google/tasks/lists/${listEnc}/${taskEnc}/complete`,
+          { method: "POST" },
+        );
         if (!res.ok) {
-          setView((prev) => (prev.kind === "ready" ? { ...prev, completingId: null } : prev));
+          setView((prev) =>
+            prev.kind === "ready" ? { ...prev, completingId: null } : prev,
+          );
           return;
         }
         setView((prev) => {
@@ -91,7 +89,9 @@ export function TodoRenderer({ config }: { config: Record<string, unknown> }) {
           };
         });
       } catch {
-        setView((prev) => (prev.kind === "ready" ? { ...prev, completingId: null } : prev));
+        setView((prev) =>
+          prev.kind === "ready" ? { ...prev, completingId: null } : prev,
+        );
       }
     },
     [cfg.listId],
