@@ -1,15 +1,22 @@
-# family-dashboard production compose (TASK-025)
-# 1) cp .env.example .env  and set SESSION_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
-# 2) docker compose up -d --build
+# family-dashboard production compose (TASK-025 + TASK-026 Caddy)
 #
-# Compose reads `.env` in this directory for ${VAR} substitution.
-# SQLite + HA config: volume app-data → /data
+# Local / app-only:
+#   cp .env.example .env && edit secrets
+#   docker compose up -d --build
+#
+# VPS with HTTPS (Caddy):
+#   set DOMAIN=dash.example.com and APP_URL=https://dash.example.com in .env
+#   docker compose --profile with-caddy up -d --build
+#   (do not publish app port publicly when using Caddy)
 
 services:
   app:
     build: .
+    expose:
+      - "3000"
+    # Optional direct access for debugging (bind localhost only). Override in .env: PUBLISH_APP_PORT=3000
     ports:
-      - "${PORT:-3000}:3000"
+      - "${PUBLISH_APP_PORT:-127.0.0.1:3000}:3000"
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL:-file:/data/app.db}
@@ -28,6 +35,32 @@ services:
     volumes:
       - app-data:/data
     restart: unless-stopped
+    networks:
+      - internal
+
+  caddy:
+    image: caddy:2.8-alpine
+    profiles: ["with-caddy"]
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env for Caddy (e.g. dash.example.com)}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - internal
+
+networks:
+  internal:
 
 volumes:
   app-data:
+  caddy-data:
+  caddy-config:
