@@ -1,0 +1,32 @@
+# Dependencies & build
+node_modules
+.next
+out
+build
+coverage
+playwright-report
+test-results
+
+# Git / IDE
+.git
+.github
+.idea
+.vscode
+*.swp
+.DS_Store
+
+# Local data & secrets — never bake into the image
+data
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.env
+.env.*
+!.env.example
+
+# Docs / tests not needed at runtime
+tests
+e2e
+*.md
+!README.md
