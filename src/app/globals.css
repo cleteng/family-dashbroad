@@ -24,3 +24,22 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* TASK-028: mobile display / touch */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Prefer tap over 300ms delay on older WebKit where applicable */
+button,
+[role="button"],
+input[type="checkbox"],
+a {
+  touch-action: manipulation;
+}
+
+/* Display board: reduce accidental callouts on long-press */
+[data-testid="display-board"] {
+  -webkit-touch-callout: none;
+}
