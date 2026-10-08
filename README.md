@@ -2,8 +2,8 @@
 
 Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
 
-**Current status: TASK-024 complete** (display long-running runtime).  
-Next: further product tasks as planned.
+**Current status: TASK-025 complete** (Docker production deploy).  
+Next: reverse proxy / Caddy (TASK-026).
 
 ## Tech Stack
 
@@ -96,3 +96,8 @@ Server-side in-memory cache (`src/lib/data-cache.ts`). Keys (no tokens):
 | `gtasks:tasks:{userId}:{listId}` | 5 min  | Incomplete tasks   |
 
 Stale fallback when upstream fails and an older entry exists.
+
+
+## Docker
+
+See [docs/DOCKER.md](docs/DOCKER.md) for production Compose + SQLite volume.
