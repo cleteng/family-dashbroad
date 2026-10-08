@@ -5,10 +5,12 @@ import {
   seedDataCache,
   invalidateCache,
   peekDataCache,
+  dataCacheSize,
   weatherCacheKey,
   geocodeCacheKey,
   gtasksTasksCacheKey,
   GEOCODE_CACHE_TTL_MS,
+  MAX_CACHE_ENTRIES,
 } from "@/lib/data-cache";
 
 describe("data-cache getCached", () => {
@@ -78,5 +80,36 @@ describe("data-cache getCached", () => {
     expect(geocodeCacheKey("J4L3B3")).toBe("geocode:J4L3B3");
     expect(gtasksTasksCacheKey("u1", "L1")).toBe("gtasks:tasks:u1:L1");
     expect(GEOCODE_CACHE_TTL_MS).toBe(24 * 60 * 60 * 1000);
+  });
+
+  it("concurrent miss for same key calls fetcher only once", async () => {
+    let resolve!: (v: string) => void;
+    const gate = new Promise<string>((r) => {
+      resolve = r;
+    });
+    const fetcher = vi.fn(() => gate);
+
+    const p1 = getCached("same", fetcher, 60_000);
+    const p2 = getCached("same", fetcher, 60_000);
+    const p3 = getCached("same", fetcher, 60_000);
+
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    resolve("shared");
+
+    const [a, b, c] = await Promise.all([p1, p2, p3]);
+    expect(a.data).toBe("shared");
+    expect(b.data).toBe("shared");
+    expect(c.data).toBe("shared");
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("evicts oldest entries when over MAX_CACHE_ENTRIES", () => {
+    // Seed beyond cap without going through getCached
+    for (let i = 0; i < MAX_CACHE_ENTRIES + 3; i++) {
+      seedDataCache(`evict-${i}`, i, Date.now());
+    }
+    expect(dataCacheSize()).toBe(MAX_CACHE_ENTRIES);
+    expect(peekDataCache("evict-0")).toBeNull();
+    expect(peekDataCache(`evict-${MAX_CACHE_ENTRIES + 2}`)).not.toBeNull();
   });
 });
