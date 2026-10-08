@@ -1,10 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useDisplayDataRefresh } from "@/hooks/useDisplayRuntime";
 import { mergeHASensorConfig } from "./config";
-import { HASensorView, type HASensorPayload, type HASensorViewState } from "./HASensorView";
+import {
+  HASensorView,
+  type HASensorPayload,
+  type HASensorViewState,
+} from "./HASensorView";
 
-export function HASensorRenderer({ config }: { config: Record<string, unknown> }) {
+export function HASensorRenderer({
+  config,
+}: {
+  config: Record<string, unknown>;
+}) {
   const cfg = useMemo(() => mergeHASensorConfig(config), [config]);
   const [view, setView] = useState<HASensorViewState>(() =>
     cfg.entityId ? { kind: "loading" } : { kind: "no_entity" },
@@ -22,7 +31,10 @@ export function HASensorRenderer({ config }: { config: Record<string, unknown> }
         cache: "no-store",
       });
       if (res.status === 503) {
-        setView({ kind: "ha_unavailable" });
+        // Keep last good reading if any
+        setView((prev) =>
+          prev.kind === "ready" ? prev : { kind: "ha_unavailable" },
+        );
         return;
       }
       if (res.status === 404) {
@@ -30,30 +42,18 @@ export function HASensorRenderer({ config }: { config: Record<string, unknown> }
         return;
       }
       if (!res.ok) {
-        setView({ kind: "error" });
+        setView((prev) => (prev.kind === "ready" ? prev : { kind: "error" }));
         return;
       }
       const json = (await res.json()) as HASensorPayload;
       setView({ kind: "ready", data: json });
     } catch {
-      setView({ kind: "error" });
+      setView((prev) => (prev.kind === "ready" ? prev : { kind: "error" }));
     }
   }, [cfg.entityId]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const run = () => {
-      if (!cancelled) void load();
-    };
-    const start = setTimeout(run, 0);
-    const ms = Math.max(10, cfg.refreshInterval) * 1000;
-    const id = setInterval(run, ms);
-    return () => {
-      cancelled = true;
-      clearTimeout(start);
-      clearInterval(id);
-    };
-  }, [load, cfg.refreshInterval]);
+  const intervalMs = Math.max(10, cfg.refreshInterval) * 1000;
+  useDisplayDataRefresh(load, intervalMs);
 
   return <HASensorView view={view} />;
 }
