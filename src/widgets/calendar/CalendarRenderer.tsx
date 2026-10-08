@@ -156,7 +156,7 @@ export function CalendarRenderer({ config }: { config: Record<string, unknown> }
                   isChinaHoliday && inMonth
                     ? "text-red-400"
                     : isCanadaHoliday && inMonth
-                      ? "text-amber-400"
+                      ? "text-green-400"
                       : "text-zinc-500",
                 ].join(" ")}
               >
