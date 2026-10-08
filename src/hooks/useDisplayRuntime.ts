@@ -13,11 +13,9 @@ import {
  * Board-level online tracking + refresh broadcasts for long-running Display.
  */
 export function useDisplayOnline(): boolean {
-  const [online, setOnline] = useState(true);
+  const [online, setOnline] = useState(() => isBrowserOnline());
 
   useEffect(() => {
-    setOnline(isBrowserOnline());
-
     function onOnline() {
       setOnline(true);
       emitDisplayRefresh("online");
