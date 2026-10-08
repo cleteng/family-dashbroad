@@ -1,9 +1,9 @@
 # Family Dashboard
 
-Open-source, self-hosted family information center. Turn spare tablets and phones into always-on family displays.
+把闲置平板变成家里的常亮信息中心（天气、日历、待办、Home Assistant 等），数据自托管。
 
-**Current status: TASK-026 complete** (VPS + Caddy HTTPS deploy docs).  
-Next: further product tasks as planned.
+**使用说明（推荐先看）：** [docs/USER_GUIDE.md](docs/USER_GUIDE.md)  
+**文档目录：** [docs/README.md](docs/README.md)
 
 ## Tech Stack
 
