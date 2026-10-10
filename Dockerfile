@@ -35,16 +35,21 @@ ENV DATABASE_URL=file:/data/app.db
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Persistent volume mount point (SQLite + ha-config.json)
-RUN mkdir -p /data && chown node:node /data
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends su-exec \
+  && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p /data \
+  && chown node:node /data
 
 # Next standalone server + static assets
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
-USER node
 EXPOSE 3000
 
-# standalone output places server.js at the image workdir root
+# Start as root so entrypoint can chown the volume, then drop to node
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["node", "server.js"]
