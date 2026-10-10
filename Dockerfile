@@ -42,11 +42,8 @@ RUN mkdir -p /data && chown node:node /data
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-
 EXPOSE 3000
 
-# Start as root so entrypoint can chown the volume, then drop to node
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["node", "server.js"]
+# Inline entrypoint avoids Windows CRLF breaking a mounted .sh file.
+# chown volume then drop privileges with setpriv (util-linux).
+ENTRYPOINT ["/bin/sh", "-c", "mkdir -p /data && chown -R node:node /data 2>/dev/null || true; exec setpriv --reuid=node --regid=node --init-groups -- node server.js"]
