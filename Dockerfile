@@ -8,7 +8,11 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json* ./
-RUN npm ci --legacy-peer-deps
+# Longer network timeouts; prefer lockfile, fall back to install if ci fails
+RUN npm config set fetch-retries 5 \
+  && npm config set fetch-retry-mintimeout 20000 \
+  && npm config set fetch-retry-maxtimeout 120000 \
+  && (npm ci --legacy-peer-deps || npm install --legacy-peer-deps)
 
 FROM node:24-bookworm-slim AS builder
 WORKDIR /app
