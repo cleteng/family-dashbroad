@@ -19,7 +19,7 @@ services:
       - "${PUBLISH_APP_PORT:-127.0.0.1:3000}:3000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL:-file:/data/app.db}
+      DATABASE_URL: file:/data/app.db
       APP_URL: ${APP_URL:-http://localhost:3000}
       HOSTNAME: "0.0.0.0"
       PORT: "3000"
