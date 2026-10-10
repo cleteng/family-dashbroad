@@ -35,11 +35,8 @@ ENV DATABASE_URL=file:/data/app.db
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends su-exec \
-  && rm -rf /var/lib/apt/lists/* \
-  && mkdir -p /data \
-  && chown node:node /data
+# util-linux (setpriv) is already in bookworm-slim; no su-exec (Alpine-only)
+RUN mkdir -p /data && chown node:node /data
 
 # Next standalone server + static assets
 COPY --from=builder /app/public ./public
